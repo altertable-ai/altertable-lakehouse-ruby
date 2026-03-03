@@ -1,0 +1,3 @@
+[submodule "specs"]
+	path = altertable-client-specs
+	url = git@github.com:altertable-ai/altertable-client-specs.git
