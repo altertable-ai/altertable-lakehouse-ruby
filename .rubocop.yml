@@ -1,0 +1,16 @@
+# .rubocop.yml
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.0
+  Exclude:
+    - 'vendor/**/*'
+    - 'spec/**/*'
+    - 'bin/**/*'
+    - 'gemfiles/**/*'
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
