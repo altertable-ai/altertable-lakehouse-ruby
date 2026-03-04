@@ -1,21 +1,63 @@
 require "spec_helper"
+require "base64"
 
 RSpec.describe Altertable::Lakehouse::Client do
-  let(:client) { described_class.new(api_key: "test-key") }
   let(:base_url) { "https://api.altertable.ai" }
+  # Default credentials for tests
+  let(:username) { "testuser" }
+  let(:password) { "testpass" }
+  let(:basic_token) { Base64.strict_encode64("#{username}:#{password}") }
+  let(:client) { described_class.new(username: username, password: password) }
+
+  describe "#initialize" do
+    it "sets Basic auth header with username/password" do
+      c = described_class.new(username: "u", password: "p")
+      expect(c.instance_variable_get(:@auth_header)).to eq("Basic #{Base64.strict_encode64("u:p")}")
+    end
+
+    it "sets Basic auth header with basic_auth_token" do
+      c = described_class.new(basic_auth_token: "pre-encoded")
+      expect(c.instance_variable_get(:@auth_header)).to eq("Basic pre-encoded")
+    end
+
+    it "raises ConfigurationError if no credentials" do
+      expect { described_class.new }.to raise_error(Altertable::Lakehouse::ConfigurationError)
+    end
+  end
 
   describe "#append" do
-    it "sends correct request" do
+    it "sends correct request with Basic auth" do
       stub_request(:post, "#{base_url}/append")
         .with(
           query: { "catalog" => "main", "schema" => "public", "table" => "events" },
           body: { "user_id" => 123 }.to_json,
-          headers: { "Authorization" => "Bearer test-key", "Content-Type" => "application/json" }
+          headers: { 
+            "Authorization" => "Basic #{basic_token}",
+            "Content-Type" => "application/json" 
+          }
         )
         .to_return(status: 200, body: { ok: true }.to_json)
 
       resp = client.append(catalog: "main", schema: "public", table: "events", payload: { user_id: 123 })
       expect(resp.ok).to be true
+    end
+  end
+  
+  describe "#append with override credentials" do
+    it "uses override credentials" do
+      override_token = Base64.strict_encode64("other:pass")
+      
+      stub_request(:post, "#{base_url}/append")
+        .with(
+          query: { "catalog" => "c", "schema" => "s", "table" => "t" },
+          headers: { "Authorization" => "Basic #{override_token}" }
+        )
+        .to_return(status: 200, body: { ok: true }.to_json)
+
+      client.append(
+        catalog: "c", schema: "s", table: "t", payload: {},
+        username: "other", password: "pass"
+      )
     end
   end
 
@@ -39,6 +81,16 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result.columns).to eq({ "columns" => ["id", "val"] })
       expect(rows.length).to eq(2)
       expect(rows[0]).to eq({ "id" => 1, "val" => "a" })
+    end
+    
+    it "raises ParseError on malformed JSON" do
+      response_body = "not json\n"
+      
+      stub_request(:post, "#{base_url}/query")
+        .to_return(status: 200, body: response_body)
+        
+      result = client.query(statement: "SELECT 1")
+      expect { result.to_a }.to raise_error(Altertable::Lakehouse::ParseError)
     end
   end
 
@@ -86,7 +138,10 @@ RSpec.describe Altertable::Lakehouse::Client do
       stub_request(:post, "#{base_url}/upload")
         .with(
           query: { "catalog" => "c", "schema" => "s", "table" => "t", "format" => "csv", "mode" => "append" },
-          headers: { "Content-Type" => "application/octet-stream" },
+          headers: { 
+            "Content-Type" => "application/octet-stream",
+            "Authorization" => "Basic #{basic_token}"
+          },
           body: "file-content"
         )
         .to_return(status: 200, body: { ok: true }.to_json)
