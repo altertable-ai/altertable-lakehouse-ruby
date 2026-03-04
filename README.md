@@ -1,6 +1,6 @@
 # Altertable Lakehouse Ruby Client
 
-Official Ruby client for the [Altertable Lakehouse API](https://api.altertable.ai).
+Official Ruby client for the [Altertable Lakehouse API](https://altertable.ai/docs).
 
 ## Installation
 
@@ -18,15 +18,39 @@ Or install it yourself as:
 
     $ gem install altertable-lakehouse
 
-## Usage
-
-### Configuration
-
-Supports Basic Authentication via username/password or pre-encoded token.
+## Quick Start
 
 ```ruby
 require "altertable/lakehouse"
 
+# Initialize with credentials
+client = Altertable::Lakehouse::Client.new(
+  username: "your_username",
+  password: "your_password"
+)
+
+# Append a row
+client.append(
+  catalog: "main",
+  schema: "public",
+  table: "events",
+  payload: { user_id: 123, event: "signup", timestamp: Time.now.iso8601 }
+)
+
+# Query data
+result = client.query_all(
+  statement: "SELECT * FROM main.public.events LIMIT 10"
+)
+result[:rows].each { |row| puts row }
+```
+
+## API Reference
+
+### Initialization
+
+Supports Basic Authentication via username/password or pre-encoded token.
+
+```ruby
 # 1. Username/Password
 client = Altertable::Lakehouse::Client.new(
   username: "your_username",
@@ -46,17 +70,20 @@ client = Altertable::Lakehouse::Client.new(
 client = Altertable::Lakehouse::Client.new
 ```
 
-### Append Data
+### `append`
+
+Appends one or more rows to a table.
 
 ```ruby
+# Single row
 client.append(
   catalog: "main",
   schema: "public",
   table: "events",
-  payload: { user_id: 123, event: "signup", timestamp: Time.now.iso8601 }
+  payload: { user_id: 123, event: "signup" }
 )
 
-# Batch append:
+# Batch append
 client.append(
   catalog: "main",
   schema: "public",
@@ -66,27 +93,37 @@ client.append(
     { user_id: 456, event: "view" }
   ]
 )
+
+# Override credentials per-request
+client.append(
+  catalog: "main",
+  schema: "public",
+  table: "events",
+  payload: { user_id: 789 },
+  username: "other_user",
+  password: "other_password"
+)
 ```
 
-### Query Data (Accumulated)
+### `query_all`
 
-Fetch all rows at once:
+Executes a SQL query and returns all rows in memory (accumulated).
 
 ```ruby
 result = client.query_all(
   statement: "SELECT * FROM main.public.events LIMIT 10"
 )
 
-puts result[:metadata]
-puts result[:columns]
+puts result[:metadata] # Hash
+puts result[:columns]  # Array of columns
 result[:rows].each do |row|
   puts row
 end
 ```
 
-### Query Data (Streamed)
+### `query` (Streaming)
 
-Stream rows efficiently for large result sets:
+Executes a SQL query and streams rows efficiently for large result sets.
 
 ```ruby
 result = client.query(
@@ -99,7 +136,9 @@ result.each do |row|
 end
 ```
 
-### Upload File
+### `upload`
+
+Uploads a file (CSV, Parquet, etc.) to a table.
 
 ```ruby
 File.open("data.csv", "rb") do |file|
@@ -114,17 +153,26 @@ File.open("data.csv", "rb") do |file|
 end
 ```
 
-### Manage Queries
+### `get_query`
+
+Retrieves information about a query execution.
 
 ```ruby
-# Get query info
 info = client.get_query("query-uuid")
+puts info.state # e.g. "RUNNING", "COMPLETED"
+```
 
-# Cancel running query
+### `cancel_query`
+
+Cancels a running query.
+
+```ruby
 client.cancel_query("query-uuid", session_id: "session-123")
 ```
 
-### Validate SQL
+### `validate`
+
+Validates a SQL statement without executing it.
 
 ```ruby
 resp = client.validate(statement: "SELECT * FROM invalid_table")
@@ -132,11 +180,16 @@ puts resp.valid # => false
 puts resp.error
 ```
 
-## Development
+## Configuration
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests.
-
-To install this gem onto your local machine, run `bundle exec rake install`.
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `username` | String | `ENV["ALTERTABLE_USERNAME"]` | Basic Auth username |
+| `password` | String | `ENV["ALTERTABLE_PASSWORD"]` | Basic Auth password |
+| `basic_auth_token` | String | `ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]` | Pre-encoded Basic Auth token |
+| `base_url` | String | `https://api.altertable.ai` | API base URL |
+| `timeout` | Integer | `10` | Request timeout in seconds |
+| `user_agent` | String | `nil` | Custom User-Agent suffix |
 
 ## License
 
