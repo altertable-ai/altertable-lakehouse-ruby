@@ -62,7 +62,7 @@ module Altertable
           end
           
           # Process remaining buffer
-          if !buffer.empty?
+          unless buffer.empty?
             begin
               yielder << JSON.parse(buffer.strip)
             rescue JSON::ParserError
