@@ -10,3 +10,6 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 end
+
+# Disable WebMock for network access (required for faraday_net_http adapter to work with WebMock correctly when stubbing)
+WebMock.disable_net_connect!(allow_localhost: true)
