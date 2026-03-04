@@ -2,6 +2,7 @@ require "faraday"
 require "faraday/retry"
 require "faraday/net_http"
 require "json"
+require "base64"
 require_relative "models"
 require_relative "errors"
 require_relative "version"
@@ -12,16 +13,30 @@ module Altertable
       DEFAULT_BASE_URL = "https://api.altertable.ai"
       DEFAULT_TIMEOUT = 10
 
-      def initialize(api_key: nil, base_url: nil, timeout: nil, user_agent: nil)
-        @api_key = api_key || ENV["ALTERTABLE_API_KEY"]
-        raise AuthError, "API key is required" unless @api_key
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil)
+        # 1. Try passed basic_auth_token
+        # 2. Try passed username/password
+        # 3. Try ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]
+        # 4. Try ENV["ALTERTABLE_USERNAME"] / ENV["ALTERTABLE_PASSWORD"]
+
+        if basic_auth_token
+          @auth_header = "Basic #{basic_auth_token}"
+        elsif username && password
+          @auth_header = "Basic #{Base64.strict_encode64("#{username}:#{password}")}"
+        elsif (env_token = ENV["ALTERTABLE_BASIC_AUTH_TOKEN"])
+          @auth_header = "Basic #{env_token}"
+        elsif (env_user = ENV["ALTERTABLE_USERNAME"]) && (env_pass = ENV["ALTERTABLE_PASSWORD"])
+          @auth_header = "Basic #{Base64.strict_encode64("#{env_user}:#{env_pass}")}"
+        else
+          raise ConfigurationError, "Authentication credentials required (username/password or basic_auth_token)"
+        end
 
         @base_url = base_url || DEFAULT_BASE_URL
         @timeout = timeout || DEFAULT_TIMEOUT
         @user_agent = user_agent ? "AltertableRuby/#{VERSION} #{user_agent}" : "AltertableRuby/#{VERSION}"
         
         @conn = Faraday.new(url: @base_url) do |f|
-          f.headers["Authorization"] = "Bearer #{@api_key}"
+          f.headers["Authorization"] = @auth_header
           f.headers["User-Agent"] = @user_agent
           f.headers["Content-Type"] = "application/json"
           f.options.timeout = @timeout
@@ -55,7 +70,7 @@ module Altertable
                 begin
                   yielder << JSON.parse(line)
                 rescue JSON::ParserError
-                  # Incomplete JSON or error
+                  raise ParseError, "Invalid JSON line: #{line}"
                 end
               end
             end
@@ -66,7 +81,7 @@ module Altertable
             begin
               yielder << JSON.parse(buffer.strip)
             rescue JSON::ParserError
-              # Ignore malformed tail
+               raise ParseError, "Invalid JSON line: #{buffer}"
             end
           end
         end

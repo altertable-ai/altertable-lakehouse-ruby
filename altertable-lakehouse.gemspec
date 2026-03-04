@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday", "~> 2.12"
   spec.add_dependency "faraday-retry", "~> 2.0"
   spec.add_dependency "faraday-net_http" # Explicit adapter dependency
+  spec.add_dependency "base64"
 
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
