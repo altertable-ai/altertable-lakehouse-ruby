@@ -63,7 +63,7 @@ RSpec.describe Altertable::Lakehouse::Client do
 
   describe "error handling" do
     it "raises AuthError on 401" do
-      stub_request(:post, "#{base_url}/append")
+      stub_request(:post, /#{Regexp.escape(base_url)}\/append/)
         .to_return(status: 401)
       
       expect {
@@ -72,7 +72,7 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
 
     it "raises BadRequestError on 400" do
-      stub_request(:post, "#{base_url}/append")
+      stub_request(:post, /#{Regexp.escape(base_url)}\/append/)
         .to_return(status: 400, body: "Invalid data")
       
       expect {
