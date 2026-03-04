@@ -49,6 +49,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       
       stub_request(:post, "#{base_url}/append")
         .with(
+          query: { "catalog" => "c", "schema" => "s", "table" => "t" },
           headers: { "Authorization" => "Basic #{override_token}" }
         )
         .to_return(status: 200, body: { ok: true }.to_json)
