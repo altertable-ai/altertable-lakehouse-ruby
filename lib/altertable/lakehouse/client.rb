@@ -1,4 +1,6 @@
 require "faraday"
+require "faraday/retry"
+require "faraday/net_http"
 require "json"
 require_relative "models"
 require_relative "errors"
