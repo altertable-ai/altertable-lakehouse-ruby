@@ -42,24 +42,6 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(resp.ok).to be true
     end
   end
-  
-  describe "#append with override credentials" do
-    it "uses override credentials" do
-      override_token = Base64.strict_encode64("other:pass")
-      
-      stub_request(:post, "#{base_url}/append")
-        .with(
-          query: { "catalog" => "c", "schema" => "s", "table" => "t" },
-          headers: { "Authorization" => "Basic #{override_token}" }
-        )
-        .to_return(status: 200, body: { ok: true }.to_json)
-
-      client.append(
-        catalog: "c", schema: "s", table: "t", payload: {},
-        username: "other", password: "pass"
-      )
-    end
-  end
 
   describe "#query (streaming)" do
     it "parses streaming response correctly" do

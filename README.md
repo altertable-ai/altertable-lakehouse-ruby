@@ -132,18 +132,6 @@ puts resp.valid # => false
 puts resp.error
 ```
 
-### Per-Request Authentication
-
-You can override credentials on any method call:
-
-```ruby
-client.query(
-  statement: "SELECT 1",
-  username: "other_user",
-  password: "other_password"
-)
-```
-
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests.

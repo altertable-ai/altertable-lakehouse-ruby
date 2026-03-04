@@ -46,29 +46,20 @@ module Altertable
       end
 
       # POST /append
-      def append(catalog:, schema:, table:, payload:, username: nil, password: nil, basic_auth_token: nil)
+      def append(catalog:, schema:, table:, payload:)
         params = { catalog: catalog, schema: schema, table: table }
         req = Models::AppendRequest.new(payload)
-        resp = request(:post, "/append", body: req.to_h, query: params, username: username, password: password, basic_auth_token: basic_auth_token)
+        resp = request(:post, "/append", body: req.to_h, query: params)
         Models::AppendResponse.from_h(resp)
       end
 
       # POST /query (streamed)
-      def query(statement:, username: nil, password: nil, basic_auth_token: nil, **options)
+      def query(statement:, **options)
         req_body = Models::QueryRequest.new(statement: statement, **options).to_h.to_json
         
-        auth_header = if basic_auth_token
-                        "Basic #{basic_auth_token}"
-                      elsif username && password
-                        "Basic #{Base64.strict_encode64("#{username}:#{password}")}"
-                      else
-                        @auth_header
-                      end
-
         enum = Enumerator.new do |yielder|
           buffer = ""
           @conn.post("/query") do |req|
-            req.headers["Authorization"] = auth_header
             req.headers["Content-Type"] = "application/json"
             req.body = req_body
             req.options.on_data = Proc.new do |chunk, _|
@@ -110,7 +101,7 @@ module Altertable
       end
 
       # POST /upload
-      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil, username: nil, password: nil, basic_auth_token: nil)
+      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil)
         params = { 
           catalog: catalog, 
           schema: schema, 
@@ -120,18 +111,9 @@ module Altertable
         }
         params[:primary_key] = primary_key if primary_key
 
-        auth_header = if basic_auth_token
-                        "Basic #{basic_auth_token}"
-                      elsif username && password
-                        "Basic #{Base64.strict_encode64("#{username}:#{password}")}"
-                      else
-                        @auth_header
-                      end
-
         # Use a separate connection for multipart/binary if needed, 
         # but spec says body is octet-stream.
         resp = @conn.post("/upload") do |req|
-          req.headers["Authorization"] = auth_header
           req.params = params
           req.headers["Content-Type"] = "application/octet-stream"
           req.body = file_io # IO object or string
@@ -141,37 +123,28 @@ module Altertable
       end
 
       # GET /query/:query_id
-      def get_query(query_id, username: nil, password: nil, basic_auth_token: nil)
-        resp = request(:get, "/query/#{query_id}", username: username, password: password, basic_auth_token: basic_auth_token)
+      def get_query(query_id)
+        resp = request(:get, "/query/#{query_id}")
         Models::QueryLogResponse.from_h(resp)
       end
 
       # DELETE /query/:query_id
-      def cancel_query(query_id, session_id:, username: nil, password: nil, basic_auth_token: nil)
-        resp = request(:delete, "/query/#{query_id}", query: { session_id: session_id }, username: username, password: password, basic_auth_token: basic_auth_token)
+      def cancel_query(query_id, session_id:)
+        resp = request(:delete, "/query/#{query_id}", query: { session_id: session_id })
         Models::CancelQueryResponse.from_h(resp)
       end
 
       # POST /validate
-      def validate(statement:, username: nil, password: nil, basic_auth_token: nil)
+      def validate(statement:)
         req = Models::ValidateRequest.new(statement: statement)
-        resp = request(:post, "/validate", body: req.to_h, username: username, password: password, basic_auth_token: basic_auth_token)
+        resp = request(:post, "/validate", body: req.to_h)
         Models::ValidateResponse.from_h(resp)
       end
 
       private
 
-      def request(method, path, body: nil, query: nil, stream: false, basic_auth_token: nil, username: nil, password: nil, &block)
-        auth_header = if basic_auth_token
-                        "Basic #{basic_auth_token}"
-                      elsif username && password
-                        "Basic #{Base64.strict_encode64("#{username}:#{password}")}"
-                      else
-                        @auth_header
-                      end
-
+      def request(method, path, body: nil, query: nil, stream: false, &block)
         resp = @conn.send(method, path) do |req|
-          req.headers["Authorization"] = auth_header
           req.params = query if query
           req.body = body.to_json if body
           if stream
