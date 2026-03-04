@@ -1,0 +1,15 @@
+require "bundler/setup"
+require "altertable/lakehouse"
+require "webmock/rspec"
+
+RSpec.configure do |config|
+  # Enable flags like --only-failures and --next-failure
+  config.example_status_persistence_file_path = ".rspec_status"
+  config.disable_monkey_patching!
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+end
+
+# Disable WebMock for network access (required for faraday_net_http adapter to work with WebMock correctly when stubbing)
+WebMock.disable_net_connect!(allow_localhost: true)
