@@ -1,3 +1,5 @@
+require "spec_helper"
+
 RSpec.describe Altertable::Lakehouse::Client do
   let(:client) { described_class.new(api_key: "test-key") }
   let(:base_url) { "https://api.altertable.ai" }
