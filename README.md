@@ -22,17 +22,27 @@ Or install it yourself as:
 
 ### Configuration
 
+Supports Basic Authentication via username/password or pre-encoded token.
+
 ```ruby
 require "altertable/lakehouse"
 
-# Configure via constructor
+# 1. Username/Password
 client = Altertable::Lakehouse::Client.new(
-  api_key: "your_api_key",
+  username: "your_username",
+  password: "your_password",
   base_url: "https://api.altertable.ai", # Optional
   timeout: 10 # Optional
 )
 
-# Or via ENV["ALTERTABLE_API_KEY"]
+# 2. Pre-encoded Basic Auth Token
+client = Altertable::Lakehouse::Client.new(
+  basic_auth_token: "dXNlcm5hbWU6cGFzc3dvcmQ=" # base64(username:password)
+)
+
+# 3. Environment Variables
+# Set ALTERTABLE_USERNAME and ALTERTABLE_PASSWORD
+# OR set ALTERTABLE_BASIC_AUTH_TOKEN
 client = Altertable::Lakehouse::Client.new
 ```
 
@@ -45,7 +55,8 @@ client.append(
   table: "events",
   payload: { user_id: 123, event: "signup", timestamp: Time.now.iso8601 }
 )
-# Or batch:
+
+# Batch append:
 client.append(
   catalog: "main",
   schema: "public",
@@ -119,6 +130,18 @@ client.cancel_query("query-uuid", session_id: "session-123")
 resp = client.validate(statement: "SELECT * FROM invalid_table")
 puts resp.valid # => false
 puts resp.error
+```
+
+### Per-Request Authentication
+
+You can override credentials on any method call:
+
+```ruby
+client.query(
+  statement: "SELECT 1",
+  username: "other_user",
+  password: "other_password"
+)
 ```
 
 ## Development
