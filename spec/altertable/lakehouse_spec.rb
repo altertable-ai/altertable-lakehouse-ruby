@@ -9,7 +9,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       stub_request(:post, "#{base_url}/append")
         .with(
           query: { "catalog" => "main", "schema" => "public", "table" => "events" },
-          body: { "user_id" => 123 },
+          body: { "user_id" => 123 }.to_json,
           headers: { "Authorization" => "Bearer test-key", "Content-Type" => "application/json" }
         )
         .to_return(status: 200, body: { ok: true }.to_json)
@@ -29,11 +29,11 @@ RSpec.describe Altertable::Lakehouse::Client do
       ].join("\n")
 
       stub_request(:post, "#{base_url}/query")
-        .with(body: { "statement" => "SELECT * FROM t" })
-        .to_return(status: 200, body: response_body) # WebMock simulates full body unless streamed explicitly
+        .with(body: { "statement" => "SELECT * FROM t" }.to_json)
+        .to_return(status: 200, body: response_body)
 
       result = client.query(statement: "SELECT * FROM t")
-      rows = result.to_a # Force iteration
+      rows = result.to_a
 
       expect(result.metadata).to eq({ "metadata" => "some-meta" })
       expect(result.columns).to eq({ "columns" => ["id", "val"] })
@@ -51,6 +51,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       ].join("\n")
 
       stub_request(:post, "#{base_url}/query")
+        .with(body: { "statement" => "SELECT 1" }.to_json)
         .to_return(status: 200, body: response_body)
 
       result = client.query_all(statement: "SELECT 1")
@@ -90,7 +91,7 @@ RSpec.describe Altertable::Lakehouse::Client do
         )
         .to_return(status: 200, body: { ok: true }.to_json)
 
-      client.upload(catalog: "c", schema: "s", table: "t", format: "csv", mode: "append", file_io: "file-content")
+      client.upload(catalog: "c", schema: "s", table: "t", format: "csv", mode: "append", file_io: StringIO.new("file-content"))
     end
   end
 end

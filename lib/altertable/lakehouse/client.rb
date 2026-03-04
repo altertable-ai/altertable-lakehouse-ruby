@@ -60,6 +60,15 @@ module Altertable
               end
             end
           end
+          
+          # Process remaining buffer
+          if !buffer.empty?
+            begin
+              yielder << JSON.parse(buffer.strip)
+            rescue JSON::ParserError
+              # Ignore malformed tail
+            end
+          end
         end
         
         QueryResult.new(enum)
