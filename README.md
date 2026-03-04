@@ -1,6 +1,6 @@
 # Altertable Lakehouse Ruby Client
 
-Official Ruby client for the [Altertable Lakehouse API](https://api.altertable.ai).
+Official Ruby client for the [Altertable Lakehouse API](https://altertable.ai/docs).
 
 ## Installation
 
