@@ -56,36 +56,36 @@ module Altertable
       # POST /query (streamed)
       def query(statement:, **options)
         req_body = Models::QueryRequest.new(statement: statement, **options).to_h.to_json
-        
+
         enum = Enumerator.new do |yielder|
           buffer = ""
-          @conn.post("/query") do |req|
+          resp = @conn.post("/query") do |req|
             req.headers["Content-Type"] = "application/json"
             req.body = req_body
-            req.options.on_data = Proc.new do |chunk, _|
-              buffer << chunk
-              while (line_end = buffer.index("\n"))
-                line = buffer.slice!(0, line_end + 1).strip
-                next if line.empty?
-                begin
-                  yielder << JSON.parse(line)
-                rescue JSON::ParserError
-                  raise ParseError, "Invalid JSON line: #{line}"
-                end
+            req.options.on_data = proc { |chunk, _| buffer << chunk }
+          end
+
+          case resp.status
+          when 400
+            raise BadRequestError, "Bad Request: #{buffer.strip}"
+          when 401
+            raise AuthError, "Unauthorized"
+          when 200..299
+            # Parse the accumulated NDJSON buffer line by line
+            buffer.each_line do |line|
+              line = line.strip
+              next if line.empty?
+              begin
+                yielder << JSON.parse(line)
+              rescue JSON::ParserError
+                raise ParseError, "Invalid JSON line: #{line}"
               end
             end
-          end
-          
-          # Process remaining buffer
-          unless buffer.empty?
-            begin
-              yielder << JSON.parse(buffer.strip)
-            rescue JSON::ParserError
-               raise ParseError, "Invalid JSON line: #{buffer}"
-            end
+          else
+            raise ApiError, "API Error #{resp.status}: #{buffer.strip}"
           end
         end
-        
+
         QueryResult.new(enum)
       end
 
@@ -102,23 +102,23 @@ module Altertable
 
       # POST /upload
       def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil)
-        params = { 
-          catalog: catalog, 
-          schema: schema, 
-          table: table, 
-          format: format, 
-          mode: mode 
+        params = {
+          catalog: catalog,
+          schema: schema,
+          table: table,
+          format: format,
+          mode: mode
         }
         params[:primary_key] = primary_key if primary_key
 
-        # Use a separate connection for multipart/binary if needed, 
-        # but spec says body is octet-stream.
+        body = file_io.respond_to?(:read) ? file_io.read : file_io
+
         resp = @conn.post("/upload") do |req|
           req.params = params
           req.headers["Content-Type"] = "application/octet-stream"
-          req.body = file_io # IO object or string
+          req.body = body
         end
-        
+
         handle_response(resp)
       end
 
@@ -185,31 +185,39 @@ module Altertable
     
     class QueryResult
       include Enumerable
-      
+
+      # metadata: the stream header object (first NDJSON line)
+      # columns:  array of column name strings (second NDJSON line)
       attr_reader :metadata, :columns
-      
+
       def initialize(enum)
         @enum = enum
         @metadata = nil
         @columns = nil
       end
-      
+
       def each(&block)
-        # We need to wrap the enum to extract metadata/columns first
-        # Note: This will re-trigger the request if enumerated multiple times
-        first = true
-        second = true
-        
+        # The real mock streams:
+        #   line 1: { "statement":…, "session_id":…, … }   (header object)
+        #   line 2: ["col1", "col2", …]                     (column names array)
+        #   line 3+: [val1, val2, …]                        (row value arrays)
+        # We zip each row array with the column names to produce a Hash.
+        line_index = 0
+
         @enum.each do |item|
-          if first
+          case line_index
+          when 0
             @metadata = item
-            first = false
-          elsif second
+          when 1
             @columns = item
-            second = false
           else
-            block.call(item)
+            if @columns.is_a?(Array) && item.is_a?(Array)
+              block.call(@columns.zip(item).to_h)
+            else
+              block.call(item)
+            end
           end
+          line_index += 1
         end
       end
     end
