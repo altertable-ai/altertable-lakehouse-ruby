@@ -1,0 +1,9 @@
+{
+    "packages": {
+      ".": {
+        "release-type": "ruby",
+        "package-name": "altertable-lakehouse",
+        "version-file": "lib/altertable/lakehouse/version.rb"
+      }
+    }
+}
