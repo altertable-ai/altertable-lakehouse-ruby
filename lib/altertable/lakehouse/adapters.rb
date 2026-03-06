@@ -38,7 +38,7 @@ module Altertable
           end
         end
 
-        def get(path, body: nil, params: {}, headers: {}, &_block)
+        def get(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
           resp = @conn.get(path, params, headers)
           wrap_response(resp)
         rescue Faraday::ConnectionFailed => e
@@ -61,7 +61,7 @@ module Altertable
           raise Altertable::Lakehouse::TimeoutError, e.message
         end
 
-        def delete(path, body: nil, params: {}, headers: {}, &_block)
+        def delete(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
           resp = @conn.delete(path, params, headers)
           wrap_response(resp)
         rescue Faraday::ConnectionFailed => e
@@ -90,7 +90,7 @@ module Altertable
           )
         end
 
-        def get(path, body: nil, params: {}, headers: {}, &_block)
+        def get(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
           resp = @client.with(headers: headers).get(path, params: params)
           wrap_response(resp)
         end
@@ -117,7 +117,7 @@ module Altertable
           end
         end
 
-        def delete(path, body: nil, params: {}, headers: {}, &_block)
+        def delete(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
           resp = @client.with(headers: headers).delete(path, params: params)
           wrap_response(resp)
         end
@@ -140,7 +140,7 @@ module Altertable
           @uri = URI.parse(@base_url)
         end
 
-        def get(path, body: nil, params: {}, headers: {}, &block)
+        def get(path, body: nil, params: {}, headers: {}, &block) # rubocop:disable Lint/UnusedMethodArgument
           request(Net::HTTP::Get, path, params: params, headers: headers, &block)
         end
 
@@ -148,7 +148,7 @@ module Altertable
           request(Net::HTTP::Post, path, body: body, params: params, headers: headers, &block)
         end
 
-        def delete(path, body: nil, params: {}, headers: {}, &block)
+        def delete(path, body: nil, params: {}, headers: {}, &block) # rubocop:disable Lint/UnusedMethodArgument
           request(Net::HTTP::Delete, path, params: params, headers: headers, &block)
         end
 
