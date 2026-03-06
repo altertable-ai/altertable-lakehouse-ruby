@@ -10,15 +10,15 @@ module Altertable
           @headers = headers
         end
 
-        def get(path, params: {}, &block)
+        def get(path, params: {}, headers: {}, &_block)
           raise NotImplementedError
         end
 
-        def post(path, body: nil, params: {}, &block)
+        def post(path, body: nil, params: {}, headers: {}, &_block)
           raise NotImplementedError
         end
 
-        def delete(path, params: {}, &block)
+        def delete(path, params: {}, headers: {}, &_block)
           raise NotImplementedError
         end
       end
@@ -38,8 +38,8 @@ module Altertable
           end
         end
 
-        def get(path, params: {}, &block)
-          resp = @conn.get(path, params)
+        def get(path, params: {}, headers: {}, &_block)
+          resp = @conn.get(path, params, headers)
           wrap_response(resp)
         rescue Faraday::ConnectionFailed => e
           raise Altertable::Lakehouse::NetworkError, e.message
@@ -47,9 +47,10 @@ module Altertable
           raise Altertable::Lakehouse::TimeoutError, e.message
         end
 
-        def post(path, body: nil, params: {}, &block)
+        def post(path, body: nil, params: {}, headers: {}, &block)
           resp = @conn.post(path) do |req|
-            req.params = params
+            req.params = params if params
+            req.headers = req.headers.merge(headers) unless headers.empty?
             req.body = body
             req.options.on_data = block if block_given?
           end
@@ -60,8 +61,8 @@ module Altertable
           raise Altertable::Lakehouse::TimeoutError, e.message
         end
 
-        def delete(path, params: {}, &block)
-          resp = @conn.delete(path, params)
+        def delete(path, params: {}, headers: {}, &_block)
+          resp = @conn.delete(path, params, headers)
           wrap_response(resp)
         rescue Faraday::ConnectionFailed => e
           raise Altertable::Lakehouse::NetworkError, e.message
@@ -89,16 +90,17 @@ module Altertable
           )
         end
 
-        def get(path, params: {}, &block)
-          resp = @client.get(path, params: params)
+        def get(path, params: {}, headers: {}, &_block)
+          resp = @client.with(headers: headers).get(path, params: params)
           wrap_response(resp)
         end
 
-        def post(path, body: nil, params: {}, &block)
+        def post(path, body: nil, params: {}, headers: {}, &block)
+          client = @client.with(headers: headers)
           if block_given?
             # Stream response body
             # HTTPX response streaming:
-            response = @client.request("POST", path, body: body, params: params, stream: true)
+            response = client.request("POST", path, body: body, params: params, stream: true)
             
             # Check for error immediately
             if response.is_a?(HTTPX::ErrorResponse)
@@ -110,13 +112,13 @@ module Altertable
             end
             wrap_response(response)
           else
-            resp = @client.post(path, body: body, params: params)
+            resp = client.post(path, body: body, params: params)
             wrap_response(resp)
           end
         end
 
-        def delete(path, params: {}, &block)
-          resp = @client.delete(path, params: params)
+        def delete(path, params: {}, headers: {}, &_block)
+          resp = @client.with(headers: headers).delete(path, params: params)
           wrap_response(resp)
         end
 
@@ -138,27 +140,27 @@ module Altertable
           @uri = URI.parse(@base_url)
         end
 
-        def get(path, params: {}, &block)
-          request(Net::HTTP::Get, path, params: params, &block)
+        def get(path, params: {}, headers: {}, &block)
+          request(Net::HTTP::Get, path, params: params, headers: headers, &block)
         end
 
-        def post(path, body: nil, params: {}, &block)
-          request(Net::HTTP::Post, path, body: body, params: params, &block)
+        def post(path, body: nil, params: {}, headers: {}, &block)
+          request(Net::HTTP::Post, path, body: body, params: params, headers: headers, &block)
         end
 
-        def delete(path, params: {}, &block)
-          request(Net::HTTP::Delete, path, params: params, &block)
+        def delete(path, params: {}, headers: {}, &block)
+          request(Net::HTTP::Delete, path, params: params, headers: headers, &block)
         end
 
         private
 
-        def request(klass, path, body: nil, params: {}, &block)
+        def request(klass, path, body: nil, params: {}, headers: {}, &block)
           # Construct full URI for request
           uri = URI.join(@uri, path)
-          uri.query = URI.encode_www_form(params) unless params.empty?
+          uri.query = URI.encode_www_form(params) unless params.nil? || params.empty?
 
           req = klass.new(uri)
-          @headers.each { |k, v| req[k] = v }
+          @headers.merge(headers).each { |k, v| req[k] = v }
           req.body = body if body
 
           # Net::HTTP start

@@ -92,28 +92,6 @@ module Altertable
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
-        # Upload needs binary content type usually? The adapter sets JSON by default in initialize.
-        # Ideally, we should override headers per request.
-        # But for now, let's assume the adapter allows header overrides or handles it.
-        # Wait, the current adapters don't support per-request header overrides.
-        # I should add that support to adapters or just handle it here.
-        # Let's add header support to adapter methods later. For now, assuming standard JSON except upload.
-        
-        # Actually, previous implementation did:
-        # req.headers["Content-Type"] = "application/octet-stream"
-        
-        # We need to support custom headers in adapter methods.
-        # Let's fix that in adapters first? Or rely on default?
-        # The previous code for upload:
-        # req.headers["Content-Type"] = "application/octet-stream"
-        
-        # I will need to update adapters to accept headers.
-        # For now, let's just stick to standard JSON for others and see if we can hack it or update adapters.
-        # Updating adapters is safer.
-        
-        # Reverting to simpler approach: only JSON supported for now?
-        # No, upload is critical.
-        
         resp = @adapter.post("/upload", body: body, params: params, headers: { "Content-Type" => "application/octet-stream" })
         handle_response(resp)
       end
@@ -167,45 +145,45 @@ module Altertable
       end
 
       def request(method, path, body: nil, query: nil)
-        resp = @adapter.send(method, path, body: body.is_a?(Hash) ? body.to_json : body, params: query)
+        resp = @adapter.send(method, path, body: body.is_a?(Hash) ? body.to_json : body, params: query || {})
         handle_response(resp)
       end
 
       def handle_stream_response(resp, buffer, yielder)
-         case resp.status
-          when 400
-            raise BadRequestError, "Bad Request: #{buffer.strip}"
-          when 401
-            raise AuthError, "Unauthorized"
-          when 200..299
-            # Parse the accumulated NDJSON buffer line by line
-            # Buffer might be partial? 
-            # In streaming, the block is called.
-            # Here we are processing after the stream is done?
-            # Wait, QueryResult expects the stream to be processed as it comes?
-            # The previous implementation used an Enumerator that yielded as data came in.
-            # Here, @adapter.post blocks until done?
-            # If @adapter.post blocks, we only get the buffer at the end.
-            # To stream truly, @adapter.post needs to yield to the block, which yields to yielder?
-            
-            # Re-implementing streaming logic:
-            # The enumerator in `query` wraps the call. 
-            # When `query` returns QueryResult, it hasn't run the request yet.
-            # Enumerator logic is inside.
-            
-            buffer.each_line do |line|
-              line = line.strip
-              next if line.empty?
-              begin
-                yielder << JSON.parse(line)
-              rescue JSON::ParserError
-                # Partial line?
-                # For now assume full lines or handle buffering properly
-              end
+        case resp.status
+        when 400
+          raise BadRequestError, "Bad Request: #{buffer.strip}"
+        when 401
+          raise AuthError, "Unauthorized"
+        when 200..299
+          # Parse the accumulated NDJSON buffer line by line
+          # Buffer might be partial? 
+          # In streaming, the block is called.
+          # Here we are processing after the stream is done?
+          # Wait, QueryResult expects the stream to be processed as it comes?
+          # The previous implementation used an Enumerator that yielded as data came in.
+          # Here, @adapter.post blocks until done?
+          # If @adapter.post blocks, we only get the buffer at the end.
+          # To stream truly, @adapter.post needs to yield to the block, which yields to yielder?
+          
+          # Re-implementing streaming logic:
+          # The enumerator in `query` wraps the call. 
+          # When `query` returns QueryResult, it hasn't run the request yet.
+          # Enumerator logic is inside.
+          
+          buffer.each_line do |line|
+            line = line.strip
+            next if line.empty?
+            begin
+              yielder << JSON.parse(line)
+            rescue JSON::ParserError
+              # Partial line?
+              # For now assume full lines or handle buffering properly
             end
-          else
-            raise ApiError, "API Error #{resp.status}: #{buffer.strip}"
           end
+        else
+          raise ApiError, "API Error #{resp.status}: #{buffer.strip}"
+        end
       end
 
       def handle_response(resp)
@@ -230,7 +208,6 @@ module Altertable
       end
     end
 
-    
     class QueryResult
       include Enumerable
 
