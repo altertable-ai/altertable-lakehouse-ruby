@@ -3,9 +3,6 @@ PATH
   specs:
     altertable-lakehouse (0.2.0)
       base64
-      faraday (~> 2.12)
-      faraday-net_http
-      faraday-retry (~> 2.0)
 
 GEM
   remote: https://rubygems.org/
@@ -29,6 +26,9 @@ GEM
       net-http (~> 0.5)
     faraday-retry (2.4.0)
       faraday (~> 2.0)
+    http-2 (1.1.3)
+    httpx (1.7.3)
+      http-2 (>= 1.1.3)
     json (2.18.1)
     json-schema (6.1.0)
       addressable (~> 2.8)
@@ -92,14 +92,18 @@ GEM
 PLATFORMS
   arm64-darwin-25
   ruby
+  x86_64-linux
 
 DEPENDENCIES
   altertable-lakehouse!
+  faraday (~> 2.12)
   faraday-net_http
+  faraday-retry (~> 2.0)
+  httpx
   rake (~> 13.0)
   rspec (~> 3.0)
   rubocop (~> 1.50)
   testcontainers
 
 BUNDLED WITH
-   2.6.7
+  4.0.7
