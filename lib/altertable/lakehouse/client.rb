@@ -43,11 +43,18 @@ module Altertable
       end
 
       # POST /append
-      def append(catalog:, schema:, table:, payload:)
+      def append(catalog:, schema:, table:, payload:, sync: nil)
         params = { catalog: catalog, schema: schema, table: table }
+        params[:sync] = sync unless sync.nil?
         req = Models::AppendRequest.new(payload)
         resp = request(:post, "/append", body: req.to_h, query: params)
         Models::AppendResponse.from_h(resp)
+      end
+
+      # GET /tasks/:task_id
+      def get_task(task_id)
+        resp = request(:get, "/tasks/#{task_id}")
+        Models::TaskResponse.from_h(resp)
       end
 
       # POST /query (streamed)
@@ -109,10 +116,28 @@ module Altertable
       end
 
       # POST /validate
-      def validate(statement:)
-        req = Models::ValidateRequest.new(statement: statement)
+      def validate(statement:, catalog: nil, schema: nil, session_id: nil)
+        req = Models::ValidateRequest.new(
+          statement: statement,
+          catalog: catalog,
+          schema: schema,
+          session_id: session_id
+        )
         resp = request(:post, "/validate", body: req.to_h)
         Models::ValidateResponse.from_h(resp)
+      end
+
+      # POST /autocomplete
+      def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil)
+        req = Models::AutocompleteRequest.new(
+          statement: statement,
+          catalog: catalog,
+          schema: schema,
+          session_id: session_id,
+          max_suggestions: max_suggestions
+        )
+        resp = request(:post, "/autocomplete", body: req.to_h)
+        Models::AutocompleteResponse.from_h(resp)
       end
 
       private

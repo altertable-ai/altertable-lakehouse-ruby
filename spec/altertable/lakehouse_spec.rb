@@ -41,12 +41,14 @@ RSpec.describe Altertable::Lakehouse::Client do
 
   describe "#append" do
     it "appends a row and returns ok: true" do
+      table_name = "append_events_#{SecureRandom.hex(4)}"
+
       # Ensure the table exists first via upload (CSV create)
       csv = "user_id,name\n1,Alice\n"
       client.upload(
         catalog: "memory",
         schema: "main",
-        table: "append_events",
+        table: table_name,
         format: "csv",
         mode: "create",
         file_io: StringIO.new(csv)
@@ -55,9 +57,33 @@ RSpec.describe Altertable::Lakehouse::Client do
       resp = client.append(
         catalog: "memory",
         schema: "main",
-        table: "append_events",
+        table: table_name,
         payload: { user_id: 2, name: "Bob" }
       )
+      expect(resp.ok).to be true
+    end
+
+    it "supports the sync query parameter" do
+      table_name = "append_events_sync_#{SecureRandom.hex(4)}"
+
+      csv = "user_id,name\n1,Alice\n"
+      client.upload(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        format: "csv",
+        mode: "create",
+        file_io: StringIO.new(csv)
+      )
+
+      resp = client.append(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        payload: { user_id: 2, name: "Bob" },
+        sync: true
+      )
+
       expect(resp.ok).to be true
     end
 
@@ -125,6 +151,15 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result[:columns]).to eq(["x", "y"])
       expect(result[:rows]).to eq([{ "x" => 7, "y" => "hello" }])
     end
+
+    it "forwards the cache option" do
+      result = client.query_all(
+        statement: "SELECT 1 AS cached_value",
+        cache: true
+      )
+
+      expect(result[:rows]).to eq([{ "cached_value" => 1 }])
+    end
   end
 
   # ── error handling ───────────────────────────────────────────────────────────
@@ -152,17 +187,18 @@ RSpec.describe Altertable::Lakehouse::Client do
 
   describe "#upload" do
     it "creates a table from CSV in create mode and allows querying it" do
+      table_name = "upload_test_#{SecureRandom.hex(4)}"
       csv = "id,score\n10,100\n20,200\n"
       client.upload(
         catalog: "memory",
         schema: "main",
-        table: "upload_test",
+        table: table_name,
         format: "csv",
         mode: "create",
         file_io: StringIO.new(csv)
       )
 
-      result = client.query_all(statement: "SELECT * FROM upload_test ORDER BY id")
+      result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY id")
       expect(result[:columns]).to eq(["id", "score"])
       expect(result[:rows]).to eq([
         { "id" => 10, "score" => 100 },
@@ -184,6 +220,16 @@ RSpec.describe Altertable::Lakehouse::Client do
       resp = client.validate(statement: "NOT VALID SQL !!!")
       expect(resp.valid).to be false
       expect(resp.error).to be_a(String)
+    end
+
+    it "accepts optional request fields" do
+      resp = client.validate(
+        statement: "SELECT 1",
+        catalog: "memory",
+        schema: "main"
+      )
+
+      expect(resp.valid).to be true
     end
   end
 
@@ -232,6 +278,38 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       resp = client.cancel_query(query_id, session_id: session_id)
       expect(resp.cancelled).to be true
+    end
+  end
+
+  # ── #get_task ───────────────────────────────────────────────────────────────
+
+  describe "#get_task" do
+    it "returns task status from the tasks endpoint" do
+      adapter = client.instance_variable_get(:@adapter)
+      response = Altertable::Lakehouse::Adapters::Response.new(
+        200,
+        { task_id: "task-123", status: "completed" }.to_json,
+        {}
+      )
+
+      allow(adapter).to receive(:get).and_return(response)
+
+      task = client.get_task("task-123")
+      expect(task.task_id).to eq("task-123")
+      expect(task.status).to eq("completed")
+    end
+  end
+
+  # ── #autocomplete ───────────────────────────────────────────────────────────
+
+  describe "#autocomplete" do
+    it "returns autocomplete suggestions" do
+      resp = client.autocomplete(statement: "SEL", max_suggestions: 5)
+
+      expect(resp.statement).to eq("SEL")
+      expect(resp.suggestions.length).to be <= 5
+      expect(resp.suggestions).not_to be_empty
+      expect(resp.suggestions.first.suggestion).to be_a(String)
     end
   end
 end
