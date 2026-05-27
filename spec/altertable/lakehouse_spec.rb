@@ -301,72 +301,65 @@ RSpec.describe Altertable::Lakehouse::Client do
   end
 
   # ── #explain ─────────────────────────────────────────────────────────────────
+  # Mirrors altertable-mock lakehouse handlers POST /explain tests.
 
   describe "#explain" do
-    it "parses scan estimates from the explain endpoint" do
-      adapter = client.instance_variable_get(:@adapter)
-      response_body = {
-        statement: "SELECT * FROM users WHERE age > 25",
-        connections_errors: {},
-        tables: [
-          {
-            table_name: "users",
-            estimated_rows: 1000,
-            filters: "age > 25",
-            scanned_bytes_estimate: 4096,
-            scanned_files_estimate: 2,
-            total_bytes: 8192,
-            total_files: 4
-          }
-        ],
-        scanned_bytes_estimate: 4096,
-        scanned_files_estimate: 2,
-        total_bytes: 8192,
-        total_files: 4
-      }.to_json
-      response = Altertable::Lakehouse::Adapters::Response.new(200, response_body, {})
+    it "returns no table scans for a simple SELECT" do
+      resp = client.explain(statement: "SELECT 1")
 
-      allow(adapter).to receive(:post).and_return(response)
-
-      resp = client.explain(statement: "SELECT * FROM users WHERE age > 25", include_plan: false)
-
-      expect(resp.statement).to eq("SELECT * FROM users WHERE age > 25")
-      expect(resp.tables.length).to eq(1)
-      table = resp.tables.first
-      expect(table.table_name).to eq("users")
-      expect(table.estimated_rows).to eq(1000)
-      expect(table.filters).to eq("age > 25")
-      expect(table.scanned_bytes_estimate).to eq(4096)
-      expect(resp.scanned_bytes_estimate).to eq(4096)
+      expect(resp.error).to be_nil
+      expect(resp.tables).to eq([])
+      expect(resp.statement).to eq("SELECT 1")
       expect(resp.connections_errors).to eq({})
     end
 
-    it "sends optional request fields in the POST body" do
-      adapter = client.instance_variable_get(:@adapter)
-      response = Altertable::Lakehouse::Adapters::Response.new(
-        200,
-        { statement: "SELECT 1", connections_errors: {}, tables: [] }.to_json,
-        {}
-      )
+    it "returns table scan estimates for a filtered query" do
+      table_name = "explain_events_#{SecureRandom.hex(4)}"
+      client.query(
+        statement: "CREATE TABLE #{table_name} (id INTEGER, category VARCHAR)"
+      ).to_a
+      client.query(
+        statement: <<~SQL.squish
+          INSERT INTO #{table_name}
+          SELECT i, CASE WHEN i % 2 = 0 THEN 'even' ELSE 'odd' END
+          FROM generate_series(1, 100) t(i)
+        SQL
+      ).to_a
 
-      expect(adapter).to receive(:post).with(
-        "/explain",
-        hash_including(
-          body: a_string_including(
-            '"statement":"SELECT 1"',
-            '"catalog":"memory"',
-            '"schema":"main"',
-            '"include_plan":true'
-          )
-        )
-      ).and_return(response)
+      resp = client.explain(statement: "SELECT * FROM #{table_name} WHERE id > 50")
 
-      client.explain(
+      expect(resp.error).to be_nil
+      expect(resp.tables.length).to eq(1)
+      expect(resp.tables.first.table_name).to end_with(table_name)
+      expect(resp.tables.first.filters).to eq("id>50")
+      expect(resp.tables.first.estimated_rows).to be > 0
+    end
+
+    it "returns an error in the body for invalid SQL" do
+      resp = client.explain(statement: "NOT VALID SQL !!!")
+
+      expect(resp.error).to be_a(String)
+      expect(resp.tables).to eq([])
+    end
+
+    it "returns the EXPLAIN plan when include_plan is true" do
+      resp = client.explain(statement: "SELECT 1", include_plan: true)
+
+      expect(resp.error).to be_nil
+      expect(resp.plan).to be_a(Array)
+      expect(resp.plan.length).to eq(1)
+      expect(resp.plan.first).to include("name")
+    end
+
+    it "accepts optional catalog and schema" do
+      resp = client.explain(
         statement: "SELECT 1",
         catalog: "memory",
-        schema: "main",
-        include_plan: true
+        schema: "main"
       )
+
+      expect(resp.error).to be_nil
+      expect(resp.tables).to eq([])
     end
   end
 
