@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.3.0...altertable-lakehouse/v0.4.0) (2026-05-27)
+
+
+### Features
+
+* add v0.11.0 lakehouse operations ([#27](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/27)) ([cc52dbb](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/cc52dbb4ef995b027697f6fa68164f6704e02058))
+* **explain:** add /explain support ([#31](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/31)) ([b326e94](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/b326e949742f9f4c89e5ea2aeb67028513e8a118))
+* **typings:** add RBI & RBS typings ([#29](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/29)) ([c569e6d](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/c569e6d58c1c36af2f51a329591eebd2e0677d17))
+
 ## [0.3.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse-v0.2.0...altertable-lakehouse/v0.3.0) (2026-03-08)
 
 
