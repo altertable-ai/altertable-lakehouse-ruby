@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.3.0...altertable-lakehouse/v0.4.0) (2026-05-27)
+
+
+### Features
+
+* add v0.11.0 lakehouse operations ([#27](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/27)) ([cc52dbb](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/cc52dbb4ef995b027697f6fa68164f6704e02058))
+
 ## [0.3.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse-v0.2.0...altertable-lakehouse/v0.3.0) (2026-03-08)
 
 
