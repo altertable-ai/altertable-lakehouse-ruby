@@ -319,11 +319,9 @@ RSpec.describe Altertable::Lakehouse::Client do
         statement: "CREATE TABLE #{table_name} (id INTEGER, category VARCHAR)"
       ).to_a
       client.query(
-        statement: <<~SQL.squish
-          INSERT INTO #{table_name}
-          SELECT i, CASE WHEN i % 2 = 0 THEN 'even' ELSE 'odd' END
-          FROM generate_series(1, 100) t(i)
-        SQL
+        statement: "INSERT INTO #{table_name} " \
+                    "SELECT i, CASE WHEN i % 2 = 0 THEN 'even' ELSE 'odd' END " \
+                    "FROM generate_series(1, 100) t(i)"
       ).to_a
 
       resp = client.explain(statement: "SELECT * FROM #{table_name} WHERE id > 50")
