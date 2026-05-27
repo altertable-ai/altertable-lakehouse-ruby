@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    altertable-lakehouse (0.4.0)
+    altertable-lakehouse (0.4.1)
       base64
 
 GEM
