@@ -498,7 +498,7 @@ module Altertable
       end
 
       class AutocompleteResponse < Request
-        sig { returns(T::Array[AutocompleteSuggestion]) }
+        sig { returns(T::Array[::Altertable::Lakehouse::Models::AutocompleteSuggestion]) }
         def suggestions; end
 
         sig { returns(String) }
@@ -509,7 +509,7 @@ module Altertable
 
         sig do
           params(
-            suggestions: T::Array[AutocompleteSuggestion],
+            suggestions: T::Array[::Altertable::Lakehouse::Models::AutocompleteSuggestion],
             statement: String,
             connections_errors: T::Hash[T.untyped, T.untyped]
           ).void
@@ -733,7 +733,7 @@ module Altertable
 
         private
 
-        sig { params(resp: T.untyped).returns(Response) }
+        sig { params(resp: T.untyped).returns(::Altertable::Lakehouse::Adapters::Response) }
         def wrap_response(resp); end
       end
 
@@ -770,13 +770,13 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def delete(path, body: nil, params: {}, headers: {}, &block); end
 
         private
 
-        sig { params(resp: T.untyped).returns(Response) }
+        sig { params(resp: T.untyped).returns(::Altertable::Lakehouse::Adapters::Response) }
         def wrap_response(resp); end
       end
 
@@ -791,7 +791,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def get(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -802,7 +802,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def post(path, body: nil, params: {}, headers: {}, &block); end
 
