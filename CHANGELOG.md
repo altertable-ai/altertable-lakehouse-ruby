@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.4.1...altertable-lakehouse/v0.4.2) (2026-05-27)
+
+
+### Bug Fixes
+
+* **rbi:** fix more RBI signatures ([#35](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/35)) ([8be797c](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/8be797c813a9295795c1aedd9bc1c1d186b1e4cc))
+
 ## [0.4.1](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.4.0...altertable-lakehouse/v0.4.1) (2026-05-27)
 
 
