@@ -195,6 +195,21 @@ task = client.get_task("task-uuid")
 puts task.status # "pending" or "completed"
 ```
 
+### `explain`
+
+Returns scan estimates for a SQL statement without executing it.
+
+```ruby
+resp = client.explain(
+  statement: "SELECT * FROM users WHERE age > 25",
+  include_plan: true
+)
+
+resp.tables.each do |table|
+  puts "#{table.table_name}: ~#{table.estimated_rows} rows"
+end
+```
+
 ### `autocomplete`
 
 Returns SQL autocomplete suggestions.

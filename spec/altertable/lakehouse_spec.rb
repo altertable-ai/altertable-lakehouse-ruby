@@ -300,6 +300,76 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
   end
 
+  # ── #explain ─────────────────────────────────────────────────────────────────
+
+  describe "#explain" do
+    it "parses scan estimates from the explain endpoint" do
+      adapter = client.instance_variable_get(:@adapter)
+      response_body = {
+        statement: "SELECT * FROM users WHERE age > 25",
+        connections_errors: {},
+        tables: [
+          {
+            table_name: "users",
+            estimated_rows: 1000,
+            filters: "age > 25",
+            scanned_bytes_estimate: 4096,
+            scanned_files_estimate: 2,
+            total_bytes: 8192,
+            total_files: 4
+          }
+        ],
+        scanned_bytes_estimate: 4096,
+        scanned_files_estimate: 2,
+        total_bytes: 8192,
+        total_files: 4
+      }.to_json
+      response = Altertable::Lakehouse::Adapters::Response.new(200, response_body, {})
+
+      allow(adapter).to receive(:post).and_return(response)
+
+      resp = client.explain(statement: "SELECT * FROM users WHERE age > 25", include_plan: false)
+
+      expect(resp.statement).to eq("SELECT * FROM users WHERE age > 25")
+      expect(resp.tables.length).to eq(1)
+      table = resp.tables.first
+      expect(table.table_name).to eq("users")
+      expect(table.estimated_rows).to eq(1000)
+      expect(table.filters).to eq("age > 25")
+      expect(table.scanned_bytes_estimate).to eq(4096)
+      expect(resp.scanned_bytes_estimate).to eq(4096)
+      expect(resp.connections_errors).to eq({})
+    end
+
+    it "sends optional request fields in the POST body" do
+      adapter = client.instance_variable_get(:@adapter)
+      response = Altertable::Lakehouse::Adapters::Response.new(
+        200,
+        { statement: "SELECT 1", connections_errors: {}, tables: [] }.to_json,
+        {}
+      )
+
+      expect(adapter).to receive(:post).with(
+        "/explain",
+        hash_including(
+          body: a_string_including(
+            '"statement":"SELECT 1"',
+            '"catalog":"memory"',
+            '"schema":"main"',
+            '"include_plan":true'
+          )
+        )
+      ).and_return(response)
+
+      client.explain(
+        statement: "SELECT 1",
+        catalog: "memory",
+        schema: "main",
+        include_plan: true
+      )
+    end
+  end
+
   # ── #autocomplete ───────────────────────────────────────────────────────────
 
   describe "#autocomplete" do

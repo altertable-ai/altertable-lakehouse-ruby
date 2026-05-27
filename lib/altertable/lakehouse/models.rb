@@ -242,6 +242,88 @@ module Altertable
           )
         end
       end
+
+      class ExplainRequest < Request
+        attr_reader :statement, :catalog, :schema, :session_id, :include_plan
+
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil)
+          @statement = statement
+          @catalog = catalog
+          @schema = schema
+          @session_id = session_id
+          @include_plan = include_plan
+        end
+
+        def to_h
+          h = { statement: @statement }
+          h[:catalog] = @catalog if @catalog
+          h[:schema] = @schema if @schema
+          h[:session_id] = @session_id if @session_id
+          h[:include_plan] = @include_plan unless @include_plan.nil?
+          h
+        end
+      end
+
+      class TableScanEstimate < Request
+        attr_reader :table_name, :estimated_rows, :filters, :scanned_bytes_estimate,
+                    :scanned_files_estimate, :total_bytes, :total_files
+
+        def initialize(table_name:, estimated_rows:, filters: nil, scanned_bytes_estimate: nil,
+                       scanned_files_estimate: nil, total_bytes: nil, total_files: nil)
+          @table_name = table_name
+          @estimated_rows = estimated_rows
+          @filters = filters
+          @scanned_bytes_estimate = scanned_bytes_estimate
+          @scanned_files_estimate = scanned_files_estimate
+          @total_bytes = total_bytes
+          @total_files = total_files
+        end
+
+        def self.from_h(h)
+          new(
+            table_name: h["table_name"],
+            estimated_rows: h["estimated_rows"],
+            filters: h["filters"],
+            scanned_bytes_estimate: h["scanned_bytes_estimate"],
+            scanned_files_estimate: h["scanned_files_estimate"],
+            total_bytes: h["total_bytes"],
+            total_files: h["total_files"]
+          )
+        end
+      end
+
+      class ExplainResponse < Request
+        attr_reader :tables, :statement, :connections_errors, :error, :plan,
+                    :scanned_bytes_estimate, :scanned_files_estimate, :total_bytes, :total_files
+
+        def initialize(tables:, statement:, connections_errors:, error: nil, plan: nil,
+                       scanned_bytes_estimate: nil, scanned_files_estimate: nil,
+                       total_bytes: nil, total_files: nil)
+          @tables = tables
+          @statement = statement
+          @connections_errors = connections_errors
+          @error = error
+          @plan = plan
+          @scanned_bytes_estimate = scanned_bytes_estimate
+          @scanned_files_estimate = scanned_files_estimate
+          @total_bytes = total_bytes
+          @total_files = total_files
+        end
+
+        def self.from_h(h)
+          new(
+            tables: Array(h["tables"]).map { |table| TableScanEstimate.from_h(table) },
+            statement: h["statement"],
+            connections_errors: h["connections_errors"] || {},
+            error: h["error"],
+            plan: h["plan"],
+            scanned_bytes_estimate: h["scanned_bytes_estimate"],
+            scanned_files_estimate: h["scanned_files_estimate"],
+            total_bytes: h["total_bytes"],
+            total_files: h["total_files"]
+          )
+        end
+      end
     end
   end
 end

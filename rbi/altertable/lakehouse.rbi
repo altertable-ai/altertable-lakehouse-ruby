@@ -127,6 +127,17 @@ module Altertable
       end
       def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil); end
 
+      sig do
+        params(
+          statement: String,
+          catalog: T.nilable(String),
+          schema: T.nilable(String),
+          session_id: T.nilable(String),
+          include_plan: T.nilable(T::Boolean)
+        ).returns(Models::ExplainResponse)
+      end
+      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil); end
+
       private
 
       sig { params(name: T.nilable(Symbol), options: T.untyped).returns(T.untyped) }
@@ -506,6 +517,126 @@ module Altertable
         def initialize(suggestions:, statement:, connections_errors:); end
 
         sig { params(h: T::Hash[String, T.untyped]).returns(AutocompleteResponse) }
+        def self.from_h(h); end
+      end
+
+      class ExplainRequest < Request
+        sig { returns(String) }
+        attr_reader :statement
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :catalog
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :schema
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :session_id
+
+        sig { returns(T.nilable(T::Boolean)) }
+        attr_reader :include_plan
+
+        sig do
+          params(
+            statement: String,
+            catalog: T.nilable(String),
+            schema: T.nilable(String),
+            session_id: T.nilable(String),
+            include_plan: T.nilable(T::Boolean)
+          ).void
+        end
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil); end
+
+        sig { returns(T::Hash[Symbol, T.untyped]) }
+        def to_h; end
+      end
+
+      class TableScanEstimate < Request
+        sig { returns(String) }
+        attr_reader :table_name
+
+        sig { returns(Integer) }
+        attr_reader :estimated_rows
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :filters
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :scanned_bytes_estimate
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :scanned_files_estimate
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :total_bytes
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :total_files
+
+        sig do
+          params(
+            table_name: String,
+            estimated_rows: Integer,
+            filters: T.nilable(String),
+            scanned_bytes_estimate: T.nilable(Integer),
+            scanned_files_estimate: T.nilable(Integer),
+            total_bytes: T.nilable(Integer),
+            total_files: T.nilable(Integer)
+          ).void
+        end
+        def initialize(table_name:, estimated_rows:, filters: nil, scanned_bytes_estimate: nil,
+                       scanned_files_estimate: nil, total_bytes: nil, total_files: nil); end
+
+        sig { params(h: T::Hash[String, T.untyped]).returns(TableScanEstimate) }
+        def self.from_h(h); end
+      end
+
+      class ExplainResponse < Request
+        sig { returns(T::Array[TableScanEstimate]) }
+        attr_reader :tables
+
+        sig { returns(String) }
+        attr_reader :statement
+
+        sig { returns(T::Hash[T.untyped, T.untyped]) }
+        attr_reader :connections_errors
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :error
+
+        sig { returns(T.untyped) }
+        attr_reader :plan
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :scanned_bytes_estimate
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :scanned_files_estimate
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :total_bytes
+
+        sig { returns(T.nilable(Integer)) }
+        attr_reader :total_files
+
+        sig do
+          params(
+            tables: T::Array[TableScanEstimate],
+            statement: String,
+            connections_errors: T::Hash[T.untyped, T.untyped],
+            error: T.nilable(String),
+            plan: T.untyped,
+            scanned_bytes_estimate: T.nilable(Integer),
+            scanned_files_estimate: T.nilable(Integer),
+            total_bytes: T.nilable(Integer),
+            total_files: T.nilable(Integer)
+          ).void
+        end
+        def initialize(tables:, statement:, connections_errors:, error: nil, plan: nil,
+                       scanned_bytes_estimate: nil, scanned_files_estimate: nil,
+                       total_bytes: nil, total_files: nil); end
+
+        sig { params(h: T::Hash[String, T.untyped]).returns(ExplainResponse) }
         def self.from_h(h); end
       end
     end

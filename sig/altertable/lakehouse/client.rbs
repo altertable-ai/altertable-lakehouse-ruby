@@ -63,6 +63,14 @@ module Altertable
         ?max_suggestions: Integer?
       ) -> Models::AutocompleteResponse
 
+      def explain: (
+        statement: String,
+        ?catalog: String?,
+        ?schema: String?,
+        ?session_id: String?,
+        ?include_plan: bool?
+      ) -> Models::ExplainResponse
+
       private
 
       def select_adapter: (Symbol? name, untyped options) -> untyped
