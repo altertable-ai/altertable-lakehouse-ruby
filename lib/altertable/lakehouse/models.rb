@@ -21,22 +21,42 @@ module Altertable
       end
 
       class AppendResponse < Request
-        attr_reader :ok, :error_code
+        attr_reader :ok, :error_code, :error_message, :task_id
 
-        def initialize(ok:, error_code: nil)
+        def initialize(ok:, error_code: nil, error_message: nil, task_id: nil)
           @ok = ok
           @error_code = error_code
+          @error_message = error_message
+          @task_id = task_id
         end
 
         def self.from_h(h)
-          new(ok: h["ok"], error_code: h["error_code"])
+          new(
+            ok: h["ok"],
+            error_code: h["error_code"],
+            error_message: h["error_message"],
+            task_id: h["task_id"]
+          )
+        end
+      end
+
+      class TaskResponse < Request
+        attr_reader :task_id, :status
+
+        def initialize(task_id:, status:)
+          @task_id = task_id
+          @status = status
+        end
+
+        def self.from_h(h)
+          new(task_id: h["task_id"], status: h["status"])
         end
       end
 
       class QueryRequest < Request
-        attr_reader :statement, :catalog, :schema, :session_id, :compute_size, :sanitize, :limit, :offset, :timezone, :ephemeral, :visible, :requested_by, :query_id
+        attr_reader :statement, :catalog, :schema, :session_id, :compute_size, :sanitize, :limit, :offset, :timezone, :ephemeral, :visible, :requested_by, :query_id, :cache
 
-        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil)
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil, cache: nil)
           @statement = statement
           @catalog = catalog
           @schema = schema
@@ -50,6 +70,7 @@ module Altertable
           @visible = visible
           @requested_by = requested_by
           @query_id = query_id
+          @cache = cache
         end
 
         def to_h
@@ -66,19 +87,27 @@ module Altertable
           h[:visible] = @visible unless @visible.nil?
           h[:requested_by] = @requested_by if @requested_by
           h[:query_id] = @query_id if @query_id
+          h[:cache] = @cache unless @cache.nil?
           h
         end
       end
 
       class ValidateRequest < Request
-        attr_reader :statement
+        attr_reader :statement, :catalog, :schema, :session_id
 
-        def initialize(statement:)
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil)
           @statement = statement
+          @catalog = catalog
+          @schema = schema
+          @session_id = session_id
         end
 
         def to_h
-          { statement: @statement }
+          h = { statement: @statement }
+          h[:catalog] = @catalog if @catalog
+          h[:schema] = @schema if @schema
+          h[:session_id] = @session_id if @session_id
+          h
         end
       end
 
@@ -150,6 +179,67 @@ module Altertable
         
         def self.from_h(h)
           new(cancelled: h["cancelled"], message: h["message"])
+        end
+      end
+
+      class AutocompleteRequest < Request
+        attr_reader :statement, :catalog, :schema, :session_id, :max_suggestions
+
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil)
+          @statement = statement
+          @catalog = catalog
+          @schema = schema
+          @session_id = session_id
+          @max_suggestions = max_suggestions
+        end
+
+        def to_h
+          h = { statement: @statement }
+          h[:catalog] = @catalog if @catalog
+          h[:schema] = @schema if @schema
+          h[:session_id] = @session_id if @session_id
+          h[:max_suggestions] = @max_suggestions if @max_suggestions
+          h
+        end
+      end
+
+      class AutocompleteSuggestion < Request
+        attr_reader :suggestion, :suggestion_start, :suggestion_type, :suggestion_score, :extra_char
+
+        def initialize(suggestion:, suggestion_start:, suggestion_type:, suggestion_score:, extra_char: nil)
+          @suggestion = suggestion
+          @suggestion_start = suggestion_start
+          @suggestion_type = suggestion_type
+          @suggestion_score = suggestion_score
+          @extra_char = extra_char
+        end
+
+        def self.from_h(h)
+          new(
+            suggestion: h["suggestion"],
+            suggestion_start: h["suggestion_start"],
+            suggestion_type: h["suggestion_type"],
+            suggestion_score: h["suggestion_score"],
+            extra_char: h["extra_char"]
+          )
+        end
+      end
+
+      class AutocompleteResponse < Request
+        attr_reader :suggestions, :statement, :connections_errors
+
+        def initialize(suggestions:, statement:, connections_errors:)
+          @suggestions = suggestions
+          @statement = statement
+          @connections_errors = connections_errors
+        end
+
+        def self.from_h(h)
+          new(
+            suggestions: Array(h["suggestions"]).map { |suggestion| AutocompleteSuggestion.from_h(suggestion) },
+            statement: h["statement"],
+            connections_errors: h["connections_errors"] || {}
+          )
         end
       end
     end

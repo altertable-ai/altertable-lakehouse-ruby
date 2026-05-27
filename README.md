@@ -34,7 +34,8 @@ client.append(
   catalog: "main",
   schema: "public",
   table: "events",
-  payload: { user_id: 123, event: "signup", timestamp: Time.now.iso8601 }
+  payload: { user_id: 123, event: "signup", timestamp: Time.now.iso8601 },
+  sync: true
 )
 
 # Query data
@@ -94,15 +95,19 @@ client.append(
   ]
 )
 
-# Override credentials per-request
-client.append(
+# Asynchronous append with task polling
+resp = client.append(
   catalog: "main",
   schema: "public",
   table: "events",
   payload: { user_id: 789 },
-  username: "other_user",
-  password: "other_password"
+  sync: false
 )
+
+if resp.task_id
+  task = client.get_task(resp.task_id)
+  puts task.status
+end
 ```
 
 ### `query_all`
@@ -111,7 +116,8 @@ Executes a SQL query and returns all rows in memory (accumulated).
 
 ```ruby
 result = client.query_all(
-  statement: "SELECT * FROM main.public.events LIMIT 10"
+  statement: "SELECT * FROM main.public.events LIMIT 10",
+  cache: true
 )
 
 puts result[:metadata] # Hash
@@ -178,6 +184,30 @@ Validates a SQL statement without executing it.
 resp = client.validate(statement: "SELECT * FROM invalid_table")
 puts resp.valid # => false
 puts resp.error
+```
+
+### `get_task`
+
+Retrieves the status of an asynchronous append task.
+
+```ruby
+task = client.get_task("task-uuid")
+puts task.status # "pending" or "completed"
+```
+
+### `autocomplete`
+
+Returns SQL autocomplete suggestions.
+
+```ruby
+resp = client.autocomplete(
+  statement: "SEL",
+  max_suggestions: 5
+)
+
+resp.suggestions.each do |suggestion|
+  puts suggestion.suggestion
+end
 ```
 
 ## Configuration
