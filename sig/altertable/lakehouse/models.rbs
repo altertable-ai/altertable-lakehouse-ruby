@@ -1,0 +1,182 @@
+module Altertable
+  module Lakehouse
+    module Models
+      class Request
+        def to_h: () -> untyped
+      end
+
+      class AppendRequest < Request
+        attr_reader payload: ::Hash[untyped, untyped] | ::Array[::Hash[untyped, untyped]]
+
+        def initialize: ((::Hash[untyped, untyped] | ::Array[::Hash[untyped, untyped]]) payload) -> void
+        def to_h: () -> ::Hash[untyped, untyped] | ::Array[::Hash[untyped, untyped]]
+      end
+
+      class AppendResponse < Request
+        attr_reader ok: bool
+        attr_reader error_code: String?
+        attr_reader error_message: String?
+        attr_reader task_id: String?
+
+        def initialize: (?ok: bool, ?error_code: String?, ?error_message: String?, ?task_id: String?) -> void
+        def self.from_h: (::Hash[String, untyped] h) -> AppendResponse
+      end
+
+      class TaskResponse < Request
+        attr_reader task_id: String
+        attr_reader status: String
+
+        def initialize: (task_id: String, status: String) -> void
+        def self.from_h: (::Hash[String, untyped] h) -> TaskResponse
+      end
+
+      class QueryRequest < Request
+        attr_reader statement: String
+        attr_reader catalog: String?
+        attr_reader schema: String?
+        attr_reader session_id: String?
+        attr_reader compute_size: String?
+        attr_reader sanitize: bool?
+        attr_reader limit: Integer?
+        attr_reader offset: Integer?
+        attr_reader timezone: String?
+        attr_reader ephemeral: bool?
+        attr_reader visible: bool?
+        attr_reader requested_by: String?
+        attr_reader query_id: String?
+        attr_reader cache: bool?
+
+        def initialize: (
+          statement: String,
+          ?catalog: String?,
+          ?schema: String?,
+          ?session_id: String?,
+          ?compute_size: String?,
+          ?sanitize: bool?,
+          ?limit: Integer?,
+          ?offset: Integer?,
+          ?timezone: String?,
+          ?ephemeral: bool?,
+          ?visible: bool?,
+          ?requested_by: String?,
+          ?query_id: String?,
+          ?cache: bool?
+        ) -> void
+
+        def to_h: () -> ::Hash[Symbol, untyped]
+      end
+
+      class ValidateRequest < Request
+        attr_reader statement: String
+        attr_reader catalog: String?
+        attr_reader schema: String?
+        attr_reader session_id: String?
+
+        def initialize: (statement: String, ?catalog: String?, ?schema: String?, ?session_id: String?) -> void
+        def to_h: () -> ::Hash[Symbol, untyped]
+      end
+
+      class ValidateResponse < Request
+        attr_reader valid: bool
+        attr_reader statement: String
+        attr_reader connections_errors: untyped
+        attr_reader error: untyped
+
+        def initialize: (valid: bool, statement: String, ?connections_errors: untyped, ?error: untyped) -> void
+        def self.from_h: (::Hash[String, untyped] h) -> ValidateResponse
+      end
+
+      class QueryLogResponse < Request
+        attr_reader uuid: String
+        attr_reader start_time: String
+        attr_reader end_time: String
+        attr_reader duration_ms: Integer
+        attr_reader query: String
+        attr_reader session_id: String
+        attr_reader client_interface: String
+        attr_reader error: untyped
+        attr_reader stats: untyped
+        attr_reader progress: untyped
+        attr_reader visible: bool
+        attr_reader requested_by: String
+        attr_reader user_agent: String
+
+        def initialize: (
+          uuid: String,
+          start_time: String,
+          end_time: String,
+          duration_ms: Integer,
+          query: String,
+          session_id: String,
+          client_interface: String,
+          error: untyped,
+          stats: untyped,
+          progress: untyped,
+          visible: bool,
+          requested_by: String,
+          user_agent: String
+        ) -> void
+
+        def self.from_h: (::Hash[String, untyped] h) -> QueryLogResponse
+      end
+
+      class CancelQueryResponse < Request
+        attr_reader cancelled: bool
+        attr_reader message: String
+
+        def initialize: (cancelled: bool, message: String) -> void
+        def self.from_h: (::Hash[String, untyped] h) -> CancelQueryResponse
+      end
+
+      class AutocompleteRequest < Request
+        attr_reader statement: String
+        attr_reader catalog: String?
+        attr_reader schema: String?
+        attr_reader session_id: String?
+        attr_reader max_suggestions: Integer?
+
+        def initialize: (
+          statement: String,
+          ?catalog: String?,
+          ?schema: String?,
+          ?session_id: String?,
+          ?max_suggestions: Integer?
+        ) -> void
+
+        def to_h: () -> ::Hash[Symbol, untyped]
+      end
+
+      class AutocompleteSuggestion < Request
+        attr_reader suggestion: String
+        attr_reader suggestion_start: Integer
+        attr_reader suggestion_type: String
+        attr_reader suggestion_score: Numeric
+        attr_reader extra_char: String?
+
+        def initialize: (
+          suggestion: String,
+          suggestion_start: Integer,
+          suggestion_type: String,
+          suggestion_score: Numeric,
+          ?extra_char: String?
+        ) -> void
+
+        def self.from_h: (::Hash[String, untyped] h) -> AutocompleteSuggestion
+      end
+
+      class AutocompleteResponse < Request
+        attr_reader suggestions: ::Array[AutocompleteSuggestion]
+        attr_reader statement: String
+        attr_reader connections_errors: ::Hash[untyped, untyped]
+
+        def initialize: (
+          suggestions: ::Array[AutocompleteSuggestion],
+          statement: String,
+          connections_errors: ::Hash[untyped, untyped]
+        ) -> void
+
+        def self.from_h: (::Hash[String, untyped] h) -> AutocompleteResponse
+      end
+    end
+  end
+end

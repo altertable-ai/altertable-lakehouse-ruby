@@ -1,0 +1,89 @@
+module Altertable
+  module Lakehouse
+    class Client
+      @auth_header: String
+      @base_url: String
+      @timeout: Integer | Float
+      @user_agent: String
+      @adapter: untyped
+
+      DEFAULT_BASE_URL: String
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (
+        ?username: String?,
+        ?password: String?,
+        ?basic_auth_token: String?,
+        ?base_url: String?,
+        ?timeout: Integer | Float?,
+        ?user_agent: String?,
+        ?adapter: Symbol?
+      ) -> void
+
+      def append: (
+        catalog: String,
+        schema: String,
+        table: String,
+        payload: ::Hash[untyped, untyped] | ::Array[::Hash[untyped, untyped]],
+        ?sync: bool?
+      ) -> Models::AppendResponse
+
+      def get_task: (String task_id) -> Models::TaskResponse
+
+      def query: (statement: String, **untyped options) -> QueryResult
+
+      def query_all: (statement: String, **untyped options) -> ::Hash[Symbol, untyped]
+
+      def upload: (
+        catalog: String,
+        schema: String,
+        table: String,
+        format: String,
+        mode: String,
+        file_io: untyped,
+        ?primary_key: String?
+      ) -> untyped
+
+      def get_query: (String query_id) -> Models::QueryLogResponse
+
+      def cancel_query: (String query_id, session_id: String) -> Models::CancelQueryResponse
+
+      def validate: (
+        statement: String,
+        ?catalog: String?,
+        ?schema: String?,
+        ?session_id: String?
+      ) -> Models::ValidateResponse
+
+      def autocomplete: (
+        statement: String,
+        ?catalog: String?,
+        ?schema: String?,
+        ?session_id: String?,
+        ?max_suggestions: Integer?
+      ) -> Models::AutocompleteResponse
+
+      private
+
+      def select_adapter: (Symbol? name, untyped options) -> untyped
+      def try_require: (String gem_name) -> bool
+      def request: (Symbol method, String path, ?body: untyped, ?query: ::Hash[Symbol | String, untyped]?) -> untyped
+      def handle_stream_response: (Adapters::Response resp, String buffer, Enumerator::Yielder yielder) -> void
+      def handle_response: (Adapters::Response resp) -> untyped
+    end
+
+    class QueryResult
+      include Enumerable
+
+      @enum: Enumerator[untyped, untyped]
+      @metadata: untyped
+      @columns: untyped
+
+      attr_reader metadata: untyped
+      attr_reader columns: untyped
+
+      def initialize: (Enumerator[untyped, untyped] enum) -> void
+      def each: () { (untyped) -> void } -> void
+    end
+  end
+end

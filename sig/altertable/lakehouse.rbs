@@ -1,0 +1,4 @@
+module Altertable
+  module Lakehouse
+  end
+end
