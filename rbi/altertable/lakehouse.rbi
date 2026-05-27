@@ -6,25 +6,25 @@ module Altertable
 
     class Error < StandardError
       sig { returns(T.nilable(String)) }
-      attr_reader :operation
+      def operation; end
 
       sig { returns(T.nilable(String)) }
-      attr_reader :http_method
+      def http_method; end
 
       sig { returns(T.nilable(String)) }
-      attr_reader :http_path
+      def http_path; end
 
       sig { returns(T.nilable(Integer)) }
-      attr_reader :status_code
+      def status_code; end
 
       sig { returns(T::Boolean) }
-      attr_reader :retriable
+      def retriable; end
 
       sig { returns(T.nilable(String)) }
-      attr_reader :request_id
+      def request_id; end
 
       sig { returns(T.nilable(Exception)) }
-      attr_reader :cause
+      def cause; end
 
       sig do
         params(
@@ -74,17 +74,17 @@ module Altertable
           table: String,
           payload: T.any(T::Hash[T.untyped, T.untyped], T::Array[T::Hash[T.untyped, T.untyped]]),
           sync: T.nilable(T::Boolean)
-        ).returns(Models::AppendResponse)
+        ).returns(::Altertable::Lakehouse::Models::AppendResponse)
       end
       def append(catalog:, schema:, table:, payload:, sync: nil); end
 
-      sig { params(task_id: String).returns(Models::TaskResponse) }
+      sig { params(task_id: String).returns(::Altertable::Lakehouse::Models::TaskResponse) }
       def get_task(task_id); end
 
-      sig { params(statement: String, options: T.untyped).returns(QueryResult) }
+      sig { params(statement: String, options: T.untyped).returns(::Altertable::Lakehouse::QueryResult) }
       def query(statement:, **options); end
 
-      sig { params(statement: String, options: T.untyped).returns(T::Hash[Symbol, T.untyped]) }
+      sig { params(statement: String, options: T.untyped).returns(T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
       def query_all(statement:, **options); end
 
       sig do
@@ -100,10 +100,10 @@ module Altertable
       end
       def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil); end
 
-      sig { params(query_id: String).returns(Models::QueryLogResponse) }
+      sig { params(query_id: String).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
       def get_query(query_id); end
 
-      sig { params(query_id: String, session_id: String).returns(Models::CancelQueryResponse) }
+      sig { params(query_id: String, session_id: String).returns(::Altertable::Lakehouse::Models::CancelQueryResponse) }
       def cancel_query(query_id, session_id:); end
 
       sig do
@@ -112,7 +112,7 @@ module Altertable
           catalog: T.nilable(String),
           schema: T.nilable(String),
           session_id: T.nilable(String)
-        ).returns(Models::ValidateResponse)
+        ).returns(::Altertable::Lakehouse::Models::ValidateResponse)
       end
       def validate(statement:, catalog: nil, schema: nil, session_id: nil); end
 
@@ -123,7 +123,7 @@ module Altertable
           schema: T.nilable(String),
           session_id: T.nilable(String),
           max_suggestions: T.nilable(Integer)
-        ).returns(Models::AutocompleteResponse)
+        ).returns(::Altertable::Lakehouse::Models::AutocompleteResponse)
       end
       def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil); end
 
@@ -134,7 +134,7 @@ module Altertable
           schema: T.nilable(String),
           session_id: T.nilable(String),
           include_plan: T.nilable(T::Boolean)
-        ).returns(Models::ExplainResponse)
+        ).returns(::Altertable::Lakehouse::Models::ExplainResponse)
       end
       def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil); end
 
@@ -156,10 +156,10 @@ module Altertable
       end
       def request(method, path, body: nil, query: nil); end
 
-      sig { params(resp: Adapters::Response, buffer: String, yielder: Enumerator::Yielder).void }
+      sig { params(resp: ::Altertable::Lakehouse::Adapters::Response, buffer: String, yielder: Enumerator::Yielder).void }
       def handle_stream_response(resp, buffer, yielder); end
 
-      sig { params(resp: Adapters::Response).returns(T.untyped) }
+      sig { params(resp: ::Altertable::Lakehouse::Adapters::Response).returns(T.untyped) }
       def handle_response(resp); end
     end
 
@@ -167,10 +167,10 @@ module Altertable
       include Enumerable
 
       sig { returns(T.untyped) }
-      attr_reader :metadata
+      def metadata; end
 
       sig { returns(T.untyped) }
-      attr_reader :columns
+      def columns; end
 
       sig { params(enum: T.untyped).void }
       def initialize(enum); end
@@ -187,7 +187,7 @@ module Altertable
 
       class AppendRequest < Request
         sig { returns(T.any(T::Hash[T.untyped, T.untyped], T::Array[T::Hash[T.untyped, T.untyped]])) }
-        attr_reader :payload
+        def payload; end
 
         sig { params(payload: T.any(T::Hash[T.untyped, T.untyped], T::Array[T::Hash[T.untyped, T.untyped]])).void }
         def initialize(payload); end
@@ -198,16 +198,16 @@ module Altertable
 
       class AppendResponse < Request
         sig { returns(T::Boolean) }
-        attr_reader :ok
+        def ok; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :error_code
+        def error_code; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :error_message
+        def error_message; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :task_id
+        def task_id; end
 
         sig do
           params(
@@ -219,66 +219,66 @@ module Altertable
         end
         def initialize(ok:, error_code: nil, error_message: nil, task_id: nil); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(AppendResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::AppendResponse) }
         def self.from_h(h); end
       end
 
       class TaskResponse < Request
         sig { returns(String) }
-        attr_reader :task_id
+        def task_id; end
 
         sig { returns(String) }
-        attr_reader :status
+        def status; end
 
         sig { params(task_id: String, status: String).void }
         def initialize(task_id:, status:); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(TaskResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::TaskResponse) }
         def self.from_h(h); end
       end
 
       class QueryRequest < Request
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :catalog
+        def catalog; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :schema
+        def schema; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :session_id
+        def session_id; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :compute_size
+        def compute_size; end
 
         sig { returns(T.nilable(T::Boolean)) }
-        attr_reader :sanitize
+        def sanitize; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :limit
+        def limit; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :offset
+        def offset; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :timezone
+        def timezone; end
 
         sig { returns(T.nilable(T::Boolean)) }
-        attr_reader :ephemeral
+        def ephemeral; end
 
         sig { returns(T.nilable(T::Boolean)) }
-        attr_reader :visible
+        def visible; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :requested_by
+        def requested_by; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :query_id
+        def query_id; end
 
         sig { returns(T.nilable(T::Boolean)) }
-        attr_reader :cache
+        def cache; end
 
         sig do
           params(
@@ -306,16 +306,16 @@ module Altertable
 
       class ValidateRequest < Request
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :catalog
+        def catalog; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :schema
+        def schema; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :session_id
+        def session_id; end
 
         sig do
           params(
@@ -333,16 +333,16 @@ module Altertable
 
       class ValidateResponse < Request
         sig { returns(T::Boolean) }
-        attr_reader :valid
+        def valid; end
 
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T.untyped) }
-        attr_reader :connections_errors
+        def connections_errors; end
 
         sig { returns(T.untyped) }
-        attr_reader :error
+        def error; end
 
         sig do
           params(
@@ -354,49 +354,49 @@ module Altertable
         end
         def initialize(valid:, statement:, connections_errors: nil, error: nil); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(ValidateResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::ValidateResponse) }
         def self.from_h(h); end
       end
 
       class QueryLogResponse < Request
         sig { returns(String) }
-        attr_reader :uuid
+        def uuid; end
 
         sig { returns(String) }
-        attr_reader :start_time
+        def start_time; end
 
         sig { returns(String) }
-        attr_reader :end_time
+        def end_time; end
 
         sig { returns(Integer) }
-        attr_reader :duration_ms
+        def duration_ms; end
 
         sig { returns(String) }
-        attr_reader :query
+        def query; end
 
         sig { returns(String) }
-        attr_reader :session_id
+        def session_id; end
 
         sig { returns(String) }
-        attr_reader :client_interface
+        def client_interface; end
 
         sig { returns(T.untyped) }
-        attr_reader :error
+        def error; end
 
         sig { returns(T.untyped) }
-        attr_reader :stats
+        def stats; end
 
         sig { returns(T.untyped) }
-        attr_reader :progress
+        def progress; end
 
         sig { returns(T::Boolean) }
-        attr_reader :visible
+        def visible; end
 
         sig { returns(String) }
-        attr_reader :requested_by
+        def requested_by; end
 
         sig { returns(String) }
-        attr_reader :user_agent
+        def user_agent; end
 
         sig do
           params(
@@ -417,39 +417,39 @@ module Altertable
         end
         def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, progress:, visible:, requested_by:, user_agent:); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(QueryLogResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
         def self.from_h(h); end
       end
 
       class CancelQueryResponse < Request
         sig { returns(T::Boolean) }
-        attr_reader :cancelled
+        def cancelled; end
 
         sig { returns(String) }
-        attr_reader :message
+        def message; end
 
         sig { params(cancelled: T::Boolean, message: String).void }
         def initialize(cancelled:, message:); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(CancelQueryResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::CancelQueryResponse) }
         def self.from_h(h); end
       end
 
       class AutocompleteRequest < Request
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :catalog
+        def catalog; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :schema
+        def schema; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :session_id
+        def session_id; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :max_suggestions
+        def max_suggestions; end
 
         sig do
           params(
@@ -468,19 +468,19 @@ module Altertable
 
       class AutocompleteSuggestion < Request
         sig { returns(String) }
-        attr_reader :suggestion
+        def suggestion; end
 
         sig { returns(Integer) }
-        attr_reader :suggestion_start
+        def suggestion_start; end
 
         sig { returns(String) }
-        attr_reader :suggestion_type
+        def suggestion_type; end
 
         sig { returns(T.any(Integer, Float)) }
-        attr_reader :suggestion_score
+        def suggestion_score; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :extra_char
+        def extra_char; end
 
         sig do
           params(
@@ -493,19 +493,19 @@ module Altertable
         end
         def initialize(suggestion:, suggestion_start:, suggestion_type:, suggestion_score:, extra_char: nil); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(AutocompleteSuggestion) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::AutocompleteSuggestion) }
         def self.from_h(h); end
       end
 
       class AutocompleteResponse < Request
         sig { returns(T::Array[AutocompleteSuggestion]) }
-        attr_reader :suggestions
+        def suggestions; end
 
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T::Hash[T.untyped, T.untyped]) }
-        attr_reader :connections_errors
+        def connections_errors; end
 
         sig do
           params(
@@ -516,25 +516,25 @@ module Altertable
         end
         def initialize(suggestions:, statement:, connections_errors:); end
 
-        sig { params(h: T::Hash[String, T.untyped]).returns(AutocompleteResponse) }
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::AutocompleteResponse) }
         def self.from_h(h); end
       end
 
       class ExplainRequest < Request
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :catalog
+        def catalog; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :schema
+        def schema; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :session_id
+        def session_id; end
 
         sig { returns(T.nilable(T::Boolean)) }
-        attr_reader :include_plan
+        def include_plan; end
 
         sig do
           params(
@@ -553,25 +553,25 @@ module Altertable
 
       class TableScanEstimate < Request
         sig { returns(String) }
-        attr_reader :table_name
+        def table_name; end
 
         sig { returns(Integer) }
-        attr_reader :estimated_rows
+        def estimated_rows; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :filters
+        def filters; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :scanned_bytes_estimate
+        def scanned_bytes_estimate; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :scanned_files_estimate
+        def scanned_files_estimate; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :total_bytes
+        def total_bytes; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :total_files
+        def total_files; end
 
         sig do
           params(
@@ -585,43 +585,43 @@ module Altertable
           ).void
         end
         def initialize(table_name:, estimated_rows:, filters: nil, scanned_bytes_estimate: nil,
-                       scanned_files_estimate: nil, total_bytes: nil, total_files: nil); end
-
-        sig { params(h: T::Hash[String, T.untyped]).returns(TableScanEstimate) }
+                       scanned_files_estimate: nil, total_bytes: nil, total_files: nil) 
+        end
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::TableScanEstimate) }
         def self.from_h(h); end
       end
 
       class ExplainResponse < Request
-        sig { returns(T::Array[TableScanEstimate]) }
-        attr_reader :tables
+        sig { returns(T::Array[::Altertable::Lakehouse::Models::TableScanEstimate]) }
+        def tables; end
 
         sig { returns(String) }
-        attr_reader :statement
+        def statement; end
 
         sig { returns(T::Hash[T.untyped, T.untyped]) }
-        attr_reader :connections_errors
+        def connections_errors; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :error
+        def error; end
 
         sig { returns(T.untyped) }
-        attr_reader :plan
+        def plan; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :scanned_bytes_estimate
+        def scanned_bytes_estimate; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :scanned_files_estimate
+        def scanned_files_estimate; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :total_bytes
+        def total_bytes; end
 
         sig { returns(T.nilable(Integer)) }
-        attr_reader :total_files
+        def total_files; end
 
         sig do
           params(
-            tables: T::Array[TableScanEstimate],
+            tables: T::Array[::Altertable::Lakehouse::Models::TableScanEstimate],
             statement: String,
             connections_errors: T::Hash[T.untyped, T.untyped],
             error: T.nilable(String),
@@ -634,9 +634,9 @@ module Altertable
         end
         def initialize(tables:, statement:, connections_errors:, error: nil, plan: nil,
                        scanned_bytes_estimate: nil, scanned_files_estimate: nil,
-                       total_bytes: nil, total_files: nil); end
-
-        sig { params(h: T::Hash[String, T.untyped]).returns(ExplainResponse) }
+                       total_bytes: nil, total_files: nil) 
+        end
+        sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::ExplainResponse) }
         def self.from_h(h); end
       end
     end
@@ -644,13 +644,13 @@ module Altertable
     module Adapters
       class Response
         sig { returns(Integer) }
-        attr_reader :status
+        def status; end
 
         sig { returns(T.nilable(String)) }
-        attr_reader :body
+        def body; end
 
         sig { returns(T::Hash[String, T.untyped]) }
-        attr_reader :headers
+        def headers; end
 
         sig { params(status: Integer, body: T.nilable(String), headers: T::Hash[String, T.untyped]).void }
         def initialize(status, body = nil, headers = {}); end
@@ -667,7 +667,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def get(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -678,7 +678,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def post(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -689,7 +689,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def delete(path, body: nil, params: {}, headers: {}, &block); end
       end
@@ -705,7 +705,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def get(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -716,7 +716,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def post(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -727,7 +727,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def delete(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -748,7 +748,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def get(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -759,7 +759,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def post(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -813,7 +813,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def delete(path, body: nil, params: {}, headers: {}, &block); end
 
@@ -827,7 +827,7 @@ module Altertable
             params: T::Hash[T.any(Symbol, String), T.untyped],
             headers: T::Hash[String, String],
             block: T.nilable(T.proc.params(arg0: T.untyped, arg1: T.untyped).void)
-          ).returns(Response)
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
         end
         def request(klass, path, body: nil, params: {}, headers: {}, &block); end
       end
