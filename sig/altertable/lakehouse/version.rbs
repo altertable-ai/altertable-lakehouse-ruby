@@ -1,0 +1,5 @@
+module Altertable
+  module Lakehouse
+    VERSION: String
+  end
+end

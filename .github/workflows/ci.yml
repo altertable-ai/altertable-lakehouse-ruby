@@ -50,3 +50,18 @@ jobs:
           bundler-cache: true
       - name: Run RuboCop
         run: bundle exec rubocop
+
+  typing:
+    name: "Typing"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Validate RBS
+        run: bundle exec rbs validate
+      - name: Typecheck with Sorbet
+        run: bundle exec srb tc

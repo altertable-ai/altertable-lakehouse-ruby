@@ -1,0 +1,69 @@
+module Altertable
+  module Lakehouse
+    module Adapters
+      class Response
+        attr_reader status: Integer
+        attr_reader body: String?
+        attr_reader headers: ::Hash[String, untyped]
+
+        def initialize: (Integer status, ?String? body, ?::Hash[String, untyped] headers) -> void
+      end
+
+      class Base
+        @base_url: String
+        @timeout: Integer | Float
+        @headers: ::Hash[String, String]
+
+        def initialize: (base_url: String, timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+      end
+
+      class FaradayAdapter < Base
+        @conn: untyped
+
+        def initialize: (base_url: String, timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+
+        private
+
+        def wrap_response: (untyped resp) -> Response
+      end
+
+      class HttpxAdapter < Base
+        @client: untyped
+
+        def initialize: (base_url: String, timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+
+        private
+
+        def wrap_response: (untyped resp) -> Response
+      end
+
+      class NetHttpAdapter < Base
+        @uri: URI::HTTP | URI::HTTPS
+
+        def initialize: (base_url: String, timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+        def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
+
+        private
+
+        def request: (
+          untyped klass,
+          String path,
+          ?body: String?,
+          ?params: ::Hash[Symbol | String, untyped],
+          ?headers: ::Hash[String, String]
+        ) -> Response
+      end
+    end
+  end
+end

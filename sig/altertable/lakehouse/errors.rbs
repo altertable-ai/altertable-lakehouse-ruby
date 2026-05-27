@@ -1,0 +1,48 @@
+module Altertable
+  module Lakehouse
+    class Error < StandardError
+      attr_reader operation: String?
+      attr_reader http_method: String?
+      attr_reader http_path: String?
+      attr_reader status_code: Integer?
+      attr_reader retriable: bool
+      attr_reader request_id: String?
+      attr_reader cause: Exception?
+
+      def initialize: (
+        String message,
+        ?operation: String?,
+        ?http_method: String?,
+        ?http_path: String?,
+        ?status_code: Integer?,
+        ?retriable: bool,
+        ?request_id: String?,
+        ?cause: Exception?
+      ) -> void
+    end
+
+    class AuthError < Error
+    end
+
+    class BadRequestError < Error
+    end
+
+    class NetworkError < Error
+    end
+
+    class TimeoutError < Error
+    end
+
+    class SerializationError < Error
+    end
+
+    class ParseError < Error
+    end
+
+    class ApiError < Error
+    end
+
+    class ConfigurationError < Error
+    end
+  end
+end
