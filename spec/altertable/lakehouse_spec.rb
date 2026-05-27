@@ -300,6 +300,67 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
   end
 
+  # ── #explain ─────────────────────────────────────────────────────────────────
+  # Mirrors altertable-mock lakehouse handlers POST /explain tests.
+
+  describe "#explain" do
+    it "returns no table scans for a simple SELECT" do
+      resp = client.explain(statement: "SELECT 1")
+
+      expect(resp.error).to be_nil
+      expect(resp.tables).to eq([])
+      expect(resp.statement).to eq("SELECT 1")
+      expect(resp.connections_errors).to eq({})
+    end
+
+    it "returns table scan estimates for a filtered query" do
+      table_name = "explain_events_#{SecureRandom.hex(4)}"
+      client.query(
+        statement: "CREATE TABLE #{table_name} (id INTEGER, category VARCHAR)"
+      ).to_a
+      client.query(
+        statement: "INSERT INTO #{table_name} " \
+                    "SELECT i, CASE WHEN i % 2 = 0 THEN 'even' ELSE 'odd' END " \
+                    "FROM generate_series(1, 100) t(i)"
+      ).to_a
+
+      resp = client.explain(statement: "SELECT * FROM #{table_name} WHERE id > 50")
+
+      expect(resp.error).to be_nil
+      expect(resp.tables.length).to eq(1)
+      expect(resp.tables.first.table_name).to end_with(table_name)
+      expect(resp.tables.first.filters).to eq("id>50")
+      expect(resp.tables.first.estimated_rows).to be > 0
+    end
+
+    it "returns an error in the body for invalid SQL" do
+      resp = client.explain(statement: "NOT VALID SQL !!!")
+
+      expect(resp.error).to be_a(String)
+      expect(resp.tables).to eq([])
+    end
+
+    it "returns the EXPLAIN plan when include_plan is true" do
+      resp = client.explain(statement: "SELECT 1", include_plan: true)
+
+      expect(resp.error).to be_nil
+      expect(resp.plan).to be_a(Array)
+      expect(resp.plan.length).to eq(1)
+      expect(resp.plan.first).to include("name")
+    end
+
+    it "accepts optional catalog and schema" do
+      resp = client.explain(
+        statement: "SELECT 1",
+        catalog: "memory",
+        schema: "main"
+      )
+
+      expect(resp.error).to be_nil
+      expect(resp.tables).to eq([])
+    end
+  end
+
   # ── #autocomplete ───────────────────────────────────────────────────────────
 
   describe "#autocomplete" do

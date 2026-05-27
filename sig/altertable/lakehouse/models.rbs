@@ -177,6 +177,72 @@ module Altertable
 
         def self.from_h: (::Hash[String, untyped] h) -> AutocompleteResponse
       end
+
+      class ExplainRequest < Request
+        attr_reader statement: String
+        attr_reader catalog: String?
+        attr_reader schema: String?
+        attr_reader session_id: String?
+        attr_reader include_plan: bool?
+
+        def initialize: (
+          statement: String,
+          ?catalog: String?,
+          ?schema: String?,
+          ?session_id: String?,
+          ?include_plan: bool?
+        ) -> void
+
+        def to_h: () -> ::Hash[Symbol, untyped]
+      end
+
+      class TableScanEstimate < Request
+        attr_reader table_name: String
+        attr_reader estimated_rows: Integer
+        attr_reader filters: String?
+        attr_reader scanned_bytes_estimate: Integer?
+        attr_reader scanned_files_estimate: Integer?
+        attr_reader total_bytes: Integer?
+        attr_reader total_files: Integer?
+
+        def initialize: (
+          table_name: String,
+          estimated_rows: Integer,
+          ?filters: String?,
+          ?scanned_bytes_estimate: Integer?,
+          ?scanned_files_estimate: Integer?,
+          ?total_bytes: Integer?,
+          ?total_files: Integer?
+        ) -> void
+
+        def self.from_h: (::Hash[String, untyped] h) -> TableScanEstimate
+      end
+
+      class ExplainResponse < Request
+        attr_reader tables: ::Array[TableScanEstimate]
+        attr_reader statement: String
+        attr_reader connections_errors: ::Hash[untyped, untyped]
+        attr_reader error: String?
+        attr_reader plan: untyped
+        attr_reader scanned_bytes_estimate: Integer?
+        attr_reader scanned_files_estimate: Integer?
+        attr_reader total_bytes: Integer?
+        attr_reader total_files: Integer?
+
+        def initialize: (
+          tables: ::Array[TableScanEstimate],
+          statement: String,
+          connections_errors: ::Hash[untyped, untyped],
+          ?error: String?,
+          ?plan: untyped,
+          ?scanned_bytes_estimate: Integer?,
+          ?scanned_files_estimate: Integer?,
+          ?total_bytes: Integer?,
+          ?total_files: Integer?
+        ) -> void
+
+        def self.from_h: (::Hash[String, untyped] h) -> ExplainResponse
+      end
     end
   end
 end

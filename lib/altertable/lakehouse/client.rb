@@ -140,6 +140,19 @@ module Altertable
         Models::AutocompleteResponse.from_h(resp)
       end
 
+      # POST /explain
+      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil)
+        req = Models::ExplainRequest.new(
+          statement: statement,
+          catalog: catalog,
+          schema: schema,
+          session_id: session_id,
+          include_plan: include_plan
+        )
+        resp = request(:post, "/explain", body: req.to_h)
+        Models::ExplainResponse.from_h(resp)
+      end
+
       private
 
       def select_adapter(name, options)
