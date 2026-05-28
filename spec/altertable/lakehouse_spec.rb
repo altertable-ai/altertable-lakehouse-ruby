@@ -35,6 +35,17 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "raises ConfigurationError if no credentials" do
       expect { described_class.new }.to raise_error(Altertable::Lakehouse::ConfigurationError)
     end
+
+    it "merges custom headers into the adapter defaults" do
+      c = described_class.new(
+        username: "u",
+        password: "p",
+        base_url: MOCK_BASE_URL,
+        headers: { "X-Tenant" => "acme" }
+      )
+      adapter = c.instance_variable_get(:@adapter)
+      expect(adapter.instance_variable_get(:@headers)).to include("X-Tenant" => "acme")
+    end
   end
 
   # ── #append ──────────────────────────────────────────────────────────────────
@@ -159,6 +170,64 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
 
       expect(result[:rows]).to eq([{ "cached_value" => 1 }])
+    end
+  end
+
+  # ── custom headers ───────────────────────────────────────────────────────────
+
+  describe "custom headers" do
+    let(:adapter) { client.instance_variable_get(:@adapter) }
+    let(:ok_response) do
+      Altertable::Lakehouse::Adapters::Response.new(200, { valid: true }.to_json, {})
+    end
+
+    it "forwards per-request headers on #validate" do
+      expect(adapter).to receive(:post).with(
+        "/validate",
+        hash_including(headers: { "X-Request-Id" => "req-1" })
+      ).and_return(ok_response)
+
+      client.validate(statement: "SELECT 1", headers: { "X-Request-Id" => "req-1" })
+    end
+
+    it "forwards per-request headers on #query" do
+      stream_response = Altertable::Lakehouse::Adapters::Response.new(
+        200,
+        "{\"statement\":\"SELECT 1\"}\n[\"n\"]\n[1]\n",
+        {}
+      )
+
+      expect(adapter).to receive(:post).with(
+        "/query",
+        hash_including(headers: { "X-Trace" => "trace-1" })
+      ).and_yield("{\"statement\":\"SELECT 1\"}\n", nil)
+        .and_yield("[\"n\"]\n", nil)
+        .and_yield("[1]\n", nil)
+        .and_return(stream_response)
+
+      client.query(statement: "SELECT 1", headers: { "X-Trace" => "trace-1" }).to_a
+    end
+
+    it "forwards per-request headers on #upload while keeping octet-stream content type" do
+      expect(adapter).to receive(:post).with(
+        "/upload",
+        hash_including(
+          headers: {
+            "X-Upload-Source" => "etl",
+            "Content-Type" => "application/octet-stream"
+          }
+        )
+      ).and_return(ok_response)
+
+      client.upload(
+        catalog: "memory",
+        schema: "main",
+        table: "t",
+        format: "csv",
+        mode: "create",
+        file_io: StringIO.new("id\n1\n"),
+        headers: { "X-Upload-Source" => "etl" }
+      )
     end
   end
 

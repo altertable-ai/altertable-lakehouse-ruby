@@ -62,10 +62,11 @@ module Altertable
           base_url: T.nilable(String),
           timeout: T.nilable(T.any(Integer, Float)),
           user_agent: T.nilable(String),
-          adapter: T.nilable(Symbol)
+          adapter: T.nilable(Symbol),
+          headers: T::Hash[String, String]
         ).void
       end
-      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil, adapter: nil); end
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil, adapter: nil, headers: {}); end
 
       sig do
         params(
@@ -73,19 +74,20 @@ module Altertable
           schema: String,
           table: String,
           payload: T.any(T::Hash[T.untyped, T.untyped], T::Array[T::Hash[T.untyped, T.untyped]]),
-          sync: T.nilable(T::Boolean)
+          sync: T.nilable(T::Boolean),
+          headers: T::Hash[String, String]
         ).returns(::Altertable::Lakehouse::Models::AppendResponse)
       end
-      def append(catalog:, schema:, table:, payload:, sync: nil); end
+      def append(catalog:, schema:, table:, payload:, sync: nil, headers: {}); end
 
-      sig { params(task_id: String).returns(::Altertable::Lakehouse::Models::TaskResponse) }
-      def get_task(task_id); end
+      sig { params(task_id: String, headers: T::Hash[String, String]).returns(::Altertable::Lakehouse::Models::TaskResponse) }
+      def get_task(task_id, headers: {}); end
 
-      sig { params(statement: String, options: T.untyped).returns(::Altertable::Lakehouse::QueryResult) }
-      def query(statement:, **options); end
+      sig { params(statement: String, headers: T::Hash[String, String], options: T.untyped).returns(::Altertable::Lakehouse::QueryResult) }
+      def query(statement:, headers: {}, **options); end
 
-      sig { params(statement: String, options: T.untyped).returns(T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
-      def query_all(statement:, **options); end
+      sig { params(statement: String, headers: T::Hash[String, String], options: T.untyped).returns(T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
+      def query_all(statement:, headers: {}, **options); end
 
       sig do
         params(
@@ -95,26 +97,28 @@ module Altertable
           format: String,
           mode: String,
           file_io: T.untyped,
-          primary_key: T.nilable(String)
+          primary_key: T.nilable(String),
+          headers: T::Hash[String, String]
         ).returns(T.untyped)
       end
-      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil); end
+      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil, headers: {}); end
 
-      sig { params(query_id: String).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
-      def get_query(query_id); end
+      sig { params(query_id: String, headers: T::Hash[String, String]).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
+      def get_query(query_id, headers: {}); end
 
-      sig { params(query_id: String, session_id: String).returns(::Altertable::Lakehouse::Models::CancelQueryResponse) }
-      def cancel_query(query_id, session_id:); end
+      sig { params(query_id: String, session_id: String, headers: T::Hash[String, String]).returns(::Altertable::Lakehouse::Models::CancelQueryResponse) }
+      def cancel_query(query_id, session_id:, headers: {}); end
 
       sig do
         params(
           statement: String,
           catalog: T.nilable(String),
           schema: T.nilable(String),
-          session_id: T.nilable(String)
+          session_id: T.nilable(String),
+          headers: T::Hash[String, String]
         ).returns(::Altertable::Lakehouse::Models::ValidateResponse)
       end
-      def validate(statement:, catalog: nil, schema: nil, session_id: nil); end
+      def validate(statement:, catalog: nil, schema: nil, session_id: nil, headers: {}); end
 
       sig do
         params(
@@ -122,10 +126,11 @@ module Altertable
           catalog: T.nilable(String),
           schema: T.nilable(String),
           session_id: T.nilable(String),
-          max_suggestions: T.nilable(Integer)
+          max_suggestions: T.nilable(Integer),
+          headers: T::Hash[String, String]
         ).returns(::Altertable::Lakehouse::Models::AutocompleteResponse)
       end
-      def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil); end
+      def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil, headers: {}); end
 
       sig do
         params(
@@ -133,10 +138,11 @@ module Altertable
           catalog: T.nilable(String),
           schema: T.nilable(String),
           session_id: T.nilable(String),
-          include_plan: T.nilable(T::Boolean)
+          include_plan: T.nilable(T::Boolean),
+          headers: T::Hash[String, String]
         ).returns(::Altertable::Lakehouse::Models::ExplainResponse)
       end
-      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil); end
+      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil, headers: {}); end
 
       private
 
@@ -151,10 +157,11 @@ module Altertable
           method: Symbol,
           path: String,
           body: T.untyped,
-          query: T.nilable(T::Hash[T.any(Symbol, String), T.untyped])
+          query: T.nilable(T::Hash[T.any(Symbol, String), T.untyped]),
+          headers: T::Hash[String, String]
         ).returns(T.untyped)
       end
-      def request(method, path, body: nil, query: nil); end
+      def request(method, path, body: nil, query: nil, headers: {}); end
 
       sig { params(resp: ::Altertable::Lakehouse::Adapters::Response, buffer: String, yielder: Enumerator::Yielder).void }
       def handle_stream_response(resp, buffer, yielder); end

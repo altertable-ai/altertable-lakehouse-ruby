@@ -17,7 +17,8 @@ module Altertable
         ?base_url: String?,
         ?timeout: Integer | Float?,
         ?user_agent: String?,
-        ?adapter: Symbol?
+        ?adapter: Symbol?,
+        ?headers: ::Hash[String, String]
       ) -> void
 
       def append: (
@@ -25,14 +26,15 @@ module Altertable
         schema: String,
         table: String,
         payload: ::Hash[untyped, untyped] | ::Array[::Hash[untyped, untyped]],
-        ?sync: bool?
+        ?sync: bool?,
+        ?headers: ::Hash[String, String]
       ) -> Models::AppendResponse
 
-      def get_task: (String task_id) -> Models::TaskResponse
+      def get_task: (String task_id, ?headers: ::Hash[String, String]) -> Models::TaskResponse
 
-      def query: (statement: String, **untyped options) -> QueryResult
+      def query: (statement: String, ?headers: ::Hash[String, String], **untyped options) -> QueryResult
 
-      def query_all: (statement: String, **untyped options) -> ::Hash[Symbol, untyped]
+      def query_all: (statement: String, ?headers: ::Hash[String, String], **untyped options) -> ::Hash[Symbol, untyped]
 
       def upload: (
         catalog: String,
@@ -41,18 +43,20 @@ module Altertable
         format: String,
         mode: String,
         file_io: untyped,
-        ?primary_key: String?
+        ?primary_key: String?,
+        ?headers: ::Hash[String, String]
       ) -> untyped
 
-      def get_query: (String query_id) -> Models::QueryLogResponse
+      def get_query: (String query_id, ?headers: ::Hash[String, String]) -> Models::QueryLogResponse
 
-      def cancel_query: (String query_id, session_id: String) -> Models::CancelQueryResponse
+      def cancel_query: (String query_id, session_id: String, ?headers: ::Hash[String, String]) -> Models::CancelQueryResponse
 
       def validate: (
         statement: String,
         ?catalog: String?,
         ?schema: String?,
-        ?session_id: String?
+        ?session_id: String?,
+        ?headers: ::Hash[String, String]
       ) -> Models::ValidateResponse
 
       def autocomplete: (
@@ -60,7 +64,8 @@ module Altertable
         ?catalog: String?,
         ?schema: String?,
         ?session_id: String?,
-        ?max_suggestions: Integer?
+        ?max_suggestions: Integer?,
+        ?headers: ::Hash[String, String]
       ) -> Models::AutocompleteResponse
 
       def explain: (
@@ -68,14 +73,21 @@ module Altertable
         ?catalog: String?,
         ?schema: String?,
         ?session_id: String?,
-        ?include_plan: bool?
+        ?include_plan: bool?,
+        ?headers: ::Hash[String, String]
       ) -> Models::ExplainResponse
 
       private
 
       def select_adapter: (Symbol? name, untyped options) -> untyped
       def try_require: (String gem_name) -> bool
-      def request: (Symbol method, String path, ?body: untyped, ?query: ::Hash[Symbol | String, untyped]?) -> untyped
+      def request: (
+        Symbol method,
+        String path,
+        ?body: untyped,
+        ?query: ::Hash[Symbol | String, untyped]?,
+        ?headers: ::Hash[String, String]
+      ) -> untyped
       def handle_stream_response: (Adapters::Response resp, String buffer, Enumerator::Yielder yielder) -> void
       def handle_response: (Adapters::Response resp) -> untyped
     end
