@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.4.2...altertable-lakehouse/v0.5.0) (2026-05-28)
+
+
+### Features
+
+* add optional headers to all methods ([#37](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/37)) ([34e3c2d](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/34e3c2d943742a5f2a3f6a309154a8ee9aa84dc7))
+
 ## [0.4.2](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.4.1...altertable-lakehouse/v0.4.2) (2026-05-27)
 
 
