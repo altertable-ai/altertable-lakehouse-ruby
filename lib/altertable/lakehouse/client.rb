@@ -11,7 +11,7 @@ module Altertable
       DEFAULT_BASE_URL = "https://api.altertable.ai"
       DEFAULT_TIMEOUT = 10
 
-      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil, adapter: nil)
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil, adapter: nil, headers: {})
         # 1. Try passed basic_auth_token
         # 2. Try passed username/password
         # 3. Try ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]
@@ -33,39 +33,39 @@ module Altertable
         @timeout = timeout || DEFAULT_TIMEOUT
         @user_agent = user_agent ? "AltertableRuby/#{VERSION} #{user_agent}" : "AltertableRuby/#{VERSION}"
         
-        headers = {
+        default_headers = {
           "Authorization" => @auth_header,
           "User-Agent" => @user_agent,
           "Content-Type" => "application/json"
         }
 
-        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, headers: headers)
+        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, headers: default_headers.merge(headers))
       end
 
       # POST /append
-      def append(catalog:, schema:, table:, payload:, sync: nil)
+      def append(catalog:, schema:, table:, payload:, sync: nil, headers: {})
         params = { catalog: catalog, schema: schema, table: table }
         params[:sync] = sync unless sync.nil?
         req = Models::AppendRequest.new(payload)
-        resp = request(:post, "/append", body: req.to_h, query: params)
+        resp = request(:post, "/append", body: req.to_h, query: params, headers: headers)
         Models::AppendResponse.from_h(resp)
       end
 
       # GET /tasks/:task_id
-      def get_task(task_id)
-        resp = request(:get, "/tasks/#{task_id}")
+      def get_task(task_id, headers: {})
+        resp = request(:get, "/tasks/#{task_id}", headers: headers)
         Models::TaskResponse.from_h(resp)
       end
 
       # POST /query (streamed)
-      def query(statement:, **options)
+      def query(statement:, headers: {}, **options)
         req_body = Models::QueryRequest.new(statement: statement, **options).to_h.to_json
 
         enum = Enumerator.new do |yielder|
           buffer = ""
           
           # Use adapter's stream capability
-          resp = @adapter.post("/query", body: req_body) do |chunk, _|
+          resp = @adapter.post("/query", body: req_body, headers: headers) do |chunk, _|
             buffer << chunk
           end
 
@@ -76,8 +76,8 @@ module Altertable
       end
 
       # POST /query (accumulated)
-      def query_all(statement:, **options)
-        result = query(statement: statement, **options)
+      def query_all(statement:, headers: {}, **options)
+        result = query(statement: statement, headers: headers, **options)
         rows = result.to_a # Accumulate
         {
           metadata: result.metadata,
@@ -87,7 +87,7 @@ module Altertable
       end
 
       # POST /upload
-      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil)
+      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil, headers: {})
         params = {
           catalog: catalog,
           schema: schema,
@@ -99,36 +99,36 @@ module Altertable
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
-        resp = @adapter.post("/upload", body: body, params: params, headers: { "Content-Type" => "application/octet-stream" })
+        resp = @adapter.post("/upload", body: body, params: params, headers: headers.merge("Content-Type" => "application/octet-stream"))
         handle_response(resp)
       end
 
       # GET /query/:query_id
-      def get_query(query_id)
-        resp = request(:get, "/query/#{query_id}")
+      def get_query(query_id, headers: {})
+        resp = request(:get, "/query/#{query_id}", headers: headers)
         Models::QueryLogResponse.from_h(resp)
       end
 
       # DELETE /query/:query_id
-      def cancel_query(query_id, session_id:)
-        resp = request(:delete, "/query/#{query_id}", query: { session_id: session_id })
+      def cancel_query(query_id, session_id:, headers: {})
+        resp = request(:delete, "/query/#{query_id}", query: { session_id: session_id }, headers: headers)
         Models::CancelQueryResponse.from_h(resp)
       end
 
       # POST /validate
-      def validate(statement:, catalog: nil, schema: nil, session_id: nil)
+      def validate(statement:, catalog: nil, schema: nil, session_id: nil, headers: {})
         req = Models::ValidateRequest.new(
           statement: statement,
           catalog: catalog,
           schema: schema,
           session_id: session_id
         )
-        resp = request(:post, "/validate", body: req.to_h)
+        resp = request(:post, "/validate", body: req.to_h, headers: headers)
         Models::ValidateResponse.from_h(resp)
       end
 
       # POST /autocomplete
-      def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil)
+      def autocomplete(statement:, catalog: nil, schema: nil, session_id: nil, max_suggestions: nil, headers: {})
         req = Models::AutocompleteRequest.new(
           statement: statement,
           catalog: catalog,
@@ -136,12 +136,12 @@ module Altertable
           session_id: session_id,
           max_suggestions: max_suggestions
         )
-        resp = request(:post, "/autocomplete", body: req.to_h)
+        resp = request(:post, "/autocomplete", body: req.to_h, headers: headers)
         Models::AutocompleteResponse.from_h(resp)
       end
 
       # POST /explain
-      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil)
+      def explain(statement:, catalog: nil, schema: nil, session_id: nil, include_plan: nil, headers: {})
         req = Models::ExplainRequest.new(
           statement: statement,
           catalog: catalog,
@@ -149,7 +149,7 @@ module Altertable
           session_id: session_id,
           include_plan: include_plan
         )
-        resp = request(:post, "/explain", body: req.to_h)
+        resp = request(:post, "/explain", body: req.to_h, headers: headers)
         Models::ExplainResponse.from_h(resp)
       end
 
@@ -182,8 +182,13 @@ module Altertable
         false
       end
 
-      def request(method, path, body: nil, query: nil)
-        resp = @adapter.send(method, path, body: body.is_a?(Hash) ? body.to_json : body, params: query || {})
+      def request(method, path, body: nil, query: nil, headers: {})
+        resp = @adapter.send(
+          method, path,
+          body: body.is_a?(Hash) ? body.to_json : body,
+          params: query || {},
+          headers: headers
+        )
         handle_response(resp)
       end
 
