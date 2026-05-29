@@ -74,6 +74,38 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(resp.ok).to be true
     end
 
+    it "appends an array of rows and returns ok: true" do
+      table_name = "append_events_batch_#{SecureRandom.hex(4)}"
+
+      csv = "user_id,name\n1,Alice\n"
+      client.upload(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        format: "csv",
+        mode: "create",
+        file_io: StringIO.new(csv)
+      )
+
+      resp = client.append(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        payload: [
+          { user_id: 2, name: "Bob" },
+          { user_id: 3, name: "Carol" }
+        ]
+      )
+      expect(resp.ok).to be true
+
+      result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY user_id")
+      expect(result[:rows]).to eq([
+        { "user_id" => 1, "name" => "Alice" },
+        { "user_id" => 2, "name" => "Bob" },
+        { "user_id" => 3, "name" => "Carol" }
+      ])
+    end
+
     it "supports the sync query parameter" do
       table_name = "append_events_sync_#{SecureRandom.hex(4)}"
 
