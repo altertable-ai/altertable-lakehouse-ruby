@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.5.0...altertable-lakehouse/v0.5.1) (2026-05-29)
+
+
+### Bug Fixes
+
+* **array payload:** ensure array payload are also converted to JSON ([#39](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/39)) ([0d01361](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/0d013615f44104890f482c20da9316b9f8a7fee4))
+
 ## [0.5.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.4.2...altertable-lakehouse/v0.5.0) (2026-05-28)
 
 
