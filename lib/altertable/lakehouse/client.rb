@@ -185,11 +185,20 @@ module Altertable
       def request(method, path, body: nil, query: nil, headers: {})
         resp = @adapter.send(
           method, path,
-          body: body.is_a?(Hash) ? body.to_json : body,
+          body: encode_request_body(body),
           params: query || {},
           headers: headers
         )
         handle_response(resp)
+      end
+
+      def encode_request_body(body)
+        case body
+        when Hash, Array
+          body.to_json
+        else
+          body
+        end
       end
 
       def handle_stream_response(resp, buffer, yielder)
