@@ -10,8 +10,9 @@ module Altertable
     class Client
       DEFAULT_BASE_URL = "https://api.altertable.ai"
       DEFAULT_TIMEOUT = 10
+      DEFAULT_OPEN_TIMEOUT = 5
 
-      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, user_agent: nil, adapter: nil, headers: {})
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, open_timeout: nil, user_agent: nil, adapter: nil, headers: {})
         # 1. Try passed basic_auth_token
         # 2. Try passed username/password
         # 3. Try ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]
@@ -31,6 +32,7 @@ module Altertable
 
         @base_url = base_url || DEFAULT_BASE_URL
         @timeout = timeout || DEFAULT_TIMEOUT
+        @open_timeout = open_timeout || DEFAULT_OPEN_TIMEOUT
         @user_agent = user_agent ? "AltertableRuby/#{VERSION} #{user_agent}" : "AltertableRuby/#{VERSION}"
         
         default_headers = {
@@ -39,7 +41,7 @@ module Altertable
           "Content-Type" => "application/json"
         }
 
-        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, headers: default_headers.merge(headers))
+        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, open_timeout: @open_timeout, headers: default_headers.merge(headers))
       end
 
       # POST /append

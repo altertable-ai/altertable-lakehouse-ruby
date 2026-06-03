@@ -57,7 +57,8 @@ client = Altertable::Lakehouse::Client.new(
   username: "your_username",
   password: "your_password",
   base_url: "https://api.altertable.ai", # Optional
-  timeout: 10 # Optional
+  timeout: 10, # Optional
+  open_timeout: 5 # Optional
 )
 
 # 2. Pre-encoded Basic Auth Token
@@ -234,6 +235,7 @@ end
 | `basic_auth_token` | String | `ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]` | Pre-encoded Basic Auth token |
 | `base_url` | String | `https://api.altertable.ai` | API base URL |
 | `timeout` | Integer | `10` | Request timeout in seconds |
+| `open_timeout` | Integer | `5` | Connection timeout in seconds |
 | `user_agent` | String | `nil` | Custom User-Agent suffix |
 
 ## License
