@@ -240,13 +240,13 @@ RSpec.describe Altertable::Lakehouse::Client do
       client.query(statement: "SELECT 1", headers: { "X-Trace" => "trace-1" }).to_a
     end
 
-    it "forwards per-request headers on #upload while keeping octet-stream content type" do
+    it "forwards per-request headers and content type on #upload" do
       expect(adapter).to receive(:post).with(
         "/upsert",
         hash_including(
           headers: {
             "X-Upload-Source" => "etl",
-            "Content-Type" => "application/octet-stream"
+            "Content-Type" => "text/csv"
           }
         )
       ).and_return(ok_response)
