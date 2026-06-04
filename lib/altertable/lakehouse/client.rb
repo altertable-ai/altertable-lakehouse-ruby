@@ -86,20 +86,19 @@ module Altertable
         }
       end
 
-      # POST /upload
-      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil, headers: {})
+      # POST /upsert
+      def upload(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {}, content_type: "application/octet-stream")
         params = {
           catalog: catalog,
           schema: schema,
-          table: table,
-          format: format,
-          mode: mode
+          table: table
         }
+        params[:mode] = mode if mode
         params[:primary_key] = primary_key if primary_key
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
-        resp = @adapter.post("/upload", body: body, params: params, headers: headers.merge("Content-Type" => "application/octet-stream"))
+        resp = @adapter.post("/upsert", body: body, params: params, headers: headers.merge("Content-Type" => content_type))
         handle_response(resp)
       end
 

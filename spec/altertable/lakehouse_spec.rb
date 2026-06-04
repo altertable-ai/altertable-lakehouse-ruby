@@ -60,8 +60,8 @@ RSpec.describe Altertable::Lakehouse::Client do
         catalog: "memory",
         schema: "main",
         table: table_name,
-        format: "csv",
         mode: "create",
+        content_type: "text/csv",
         file_io: StringIO.new(csv)
       )
 
@@ -82,8 +82,8 @@ RSpec.describe Altertable::Lakehouse::Client do
         catalog: "memory",
         schema: "main",
         table: table_name,
-        format: "csv",
         mode: "create",
+        content_type: "text/csv",
         file_io: StringIO.new(csv)
       )
 
@@ -114,8 +114,8 @@ RSpec.describe Altertable::Lakehouse::Client do
         catalog: "memory",
         schema: "main",
         table: table_name,
-        format: "csv",
         mode: "create",
+        content_type: "text/csv",
         file_io: StringIO.new(csv)
       )
 
@@ -242,7 +242,7 @@ RSpec.describe Altertable::Lakehouse::Client do
 
     it "forwards per-request headers on #upload while keeping octet-stream content type" do
       expect(adapter).to receive(:post).with(
-        "/upload",
+        "/upsert",
         hash_including(
           headers: {
             "X-Upload-Source" => "etl",
@@ -255,8 +255,8 @@ RSpec.describe Altertable::Lakehouse::Client do
         catalog: "memory",
         schema: "main",
         table: "t",
-        format: "csv",
         mode: "create",
+        content_type: "text/csv",
         file_io: StringIO.new("id\n1\n"),
         headers: { "X-Upload-Source" => "etl" }
       )
@@ -294,8 +294,8 @@ RSpec.describe Altertable::Lakehouse::Client do
         catalog: "memory",
         schema: "main",
         table: table_name,
-        format: "csv",
         mode: "create",
+        content_type: "text/csv",
         file_io: StringIO.new(csv)
       )
 

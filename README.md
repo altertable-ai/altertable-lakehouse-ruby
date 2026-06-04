@@ -152,8 +152,8 @@ File.open("data.csv", "rb") do |file|
     catalog: "main",
     schema: "public",
     table: "events",
-    format: "csv",
     mode: "append",
+    content_type: "text/csv",
     file_io: file
   )
 end
