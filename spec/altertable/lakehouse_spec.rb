@@ -54,14 +54,14 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "appends a row and returns ok: true" do
       table_name = "append_events_#{SecureRandom.hex(4)}"
 
-      # Ensure the table exists first via upsert.
-      json = "{\"user_id\":1,\"name\":\"Alice\"}\n"
+      # Ensure the table exists first via upsert (CSV create)
+      csv = "user_id,name\n1,Alice\n"
       client.upsert(
         catalog: "memory",
         schema: "main",
         table: table_name,
         mode: "create",
-        file_io: StringIO.new(json)
+        file_io: StringIO.new(csv)
       )
 
       resp = client.append(
@@ -76,13 +76,13 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "appends an array of rows and returns ok: true" do
       table_name = "append_events_batch_#{SecureRandom.hex(4)}"
 
-      json = "{\"user_id\":1,\"name\":\"Alice\"}\n"
+      csv = "user_id,name\n1,Alice\n"
       client.upsert(
         catalog: "memory",
         schema: "main",
         table: table_name,
         mode: "create",
-        file_io: StringIO.new(json)
+        file_io: StringIO.new(csv)
       )
 
       resp = client.append(
@@ -107,13 +107,13 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "supports the sync query parameter" do
       table_name = "append_events_sync_#{SecureRandom.hex(4)}"
 
-      json = "{\"user_id\":1,\"name\":\"Alice\"}\n"
+      csv = "user_id,name\n1,Alice\n"
       client.upsert(
         catalog: "memory",
         schema: "main",
         table: table_name,
         mode: "create",
-        file_io: StringIO.new(json)
+        file_io: StringIO.new(csv)
       )
 
       resp = client.append(
@@ -282,15 +282,15 @@ RSpec.describe Altertable::Lakehouse::Client do
   # ── #upsert ──────────────────────────────────────────────────────────────────
 
   describe "#upsert" do
-    it "creates a table from JSON in create mode and allows querying it" do
+    it "creates a table from CSV in create mode and allows querying it" do
       table_name = "upload_test_#{SecureRandom.hex(4)}"
-      json = "{\"id\":10,\"score\":100}\n{\"id\":20,\"score\":200}\n"
+      csv = "id,score\n10,100\n20,200\n"
       client.upsert(
         catalog: "memory",
         schema: "main",
         table: table_name,
         mode: "create",
-        file_io: StringIO.new(json)
+        file_io: StringIO.new(csv)
       )
 
       result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY id")
