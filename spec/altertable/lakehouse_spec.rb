@@ -45,6 +45,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
       adapter = c.instance_variable_get(:@adapter)
       expect(adapter.instance_variable_get(:@headers)).to include("X-Tenant" => "acme")
+      expect(adapter.instance_variable_get(:@headers)).not_to include("Content-Type")
     end
   end
 
@@ -213,7 +214,7 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "forwards per-request headers on #validate" do
       expect(adapter).to receive(:post).with(
         "/validate",
-        hash_including(headers: { "X-Request-Id" => "req-1" })
+        hash_including(headers: hash_including("Content-Type" => "application/json", "X-Request-Id" => "req-1"))
       ).and_return(ok_response)
 
       client.validate(statement: "SELECT 1", headers: { "X-Request-Id" => "req-1" })
@@ -228,7 +229,7 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       expect(adapter).to receive(:post).with(
         "/query",
-        hash_including(headers: { "X-Trace" => "trace-1" })
+        hash_including(headers: hash_including("Content-Type" => "application/json", "X-Trace" => "trace-1"))
       ).and_yield("{\"statement\":\"SELECT 1\"}\n", nil)
         .and_yield("[\"n\"]\n", nil)
         .and_yield("[1]\n", nil)

@@ -35,8 +35,7 @@ module Altertable
         
         default_headers = {
           "Authorization" => @auth_header,
-          "User-Agent" => @user_agent,
-          "Content-Type" => "application/json"
+          "User-Agent" => @user_agent
         }
 
         @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, headers: default_headers.merge(headers))
@@ -65,7 +64,7 @@ module Altertable
           buffer = ""
           
           # Use adapter's stream capability
-          resp = @adapter.post("/query", body: req_body, headers: headers) do |chunk, _|
+          resp = @adapter.post("/query", body: req_body, headers: json_headers(headers)) do |chunk, _|
             buffer << chunk
           end
 
@@ -186,9 +185,13 @@ module Altertable
           method, path,
           body: encode_request_body(body),
           params: query || {},
-          headers: headers
+          headers: body.nil? ? headers : json_headers(headers)
         )
         handle_response(resp)
+      end
+
+      def json_headers(headers)
+        { "Content-Type" => "application/json" }.merge(headers)
       end
 
       def encode_request_body(body)
