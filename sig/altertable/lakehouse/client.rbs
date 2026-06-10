@@ -4,11 +4,13 @@ module Altertable
       @auth_header: String
       @base_url: String
       @timeout: Integer | Float
+      @open_timeout: Integer | Float
       @user_agent: String
       @adapter: untyped
 
       DEFAULT_BASE_URL: String
       DEFAULT_TIMEOUT: Integer
+      DEFAULT_OPEN_TIMEOUT: Integer
 
       def initialize: (
         ?username: String?,
@@ -16,6 +18,7 @@ module Altertable
         ?basic_auth_token: String?,
         ?base_url: String?,
         ?timeout: Integer | Float?,
+        ?open_timeout: Integer | Float?,
         ?user_agent: String?,
         ?adapter: Symbol?,
         ?headers: ::Hash[String, String]
