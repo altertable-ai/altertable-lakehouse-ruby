@@ -66,7 +66,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Initial implementation of Altertable Lakehouse Ruby Client.
-- Support for `append`, `query` (streamed/accumulated), `upload`, `validate`.
+- Support for `append`, `query` (streamed/accumulated), `upsert`, `validate`.
 - Support for `get_query`, `cancel_query`.
 - Typed request/response models.
 - Faraday-based HTTP client with retries.

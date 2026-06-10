@@ -87,7 +87,7 @@ module Altertable
       end
 
       # POST /upsert
-      def upload(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {}, content_type: "application/octet-stream")
+      def upsert(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {})
         params = {
           catalog: catalog,
           schema: schema,
@@ -98,7 +98,7 @@ module Altertable
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
-        resp = @adapter.post("/upsert", body: body, params: params, headers: headers.merge("Content-Type" => content_type))
+        resp = @adapter.post("/upsert", body: body, params: params, headers: headers)
         handle_response(resp)
       end
 

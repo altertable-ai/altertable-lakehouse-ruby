@@ -142,18 +142,17 @@ result.each do |row|
 end
 ```
 
-### `upload`
+### `upsert`
 
-Uploads a file (CSV, Parquet, etc.) to a table.
+Upserts a file (CSV, Parquet, etc.) to a table.
 
 ```ruby
 File.open("data.csv", "rb") do |file|
-  client.upload(
+  client.upsert(
     catalog: "main",
     schema: "public",
     table: "events",
     mode: "append",
-    content_type: "text/csv",
     file_io: file
   )
 end

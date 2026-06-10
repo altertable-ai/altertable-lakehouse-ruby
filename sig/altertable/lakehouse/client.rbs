@@ -36,15 +36,14 @@ module Altertable
 
       def query_all: (statement: String, ?headers: ::Hash[String, String], **untyped options) -> ::Hash[Symbol, untyped]
 
-      def upload: (
+      def upsert: (
         catalog: String,
         schema: String,
         table: String,
         file_io: untyped,
         ?mode: String?,
         ?primary_key: String?,
-        ?headers: ::Hash[String, String],
-        ?content_type: String
+        ?headers: ::Hash[String, String]
       ) -> untyped
 
       def get_query: (String query_id, ?headers: ::Hash[String, String]) -> Models::QueryLogResponse
