@@ -274,6 +274,11 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
 
     it "raises BadRequestError on invalid SQL" do
+      adapter = client.instance_variable_get(:@adapter)
+      allow(adapter).to receive(:post).and_return(
+        Altertable::Lakehouse::Adapters::Response.new(400, "invalid SQL", {})
+      )
+
       expect {
         client.query(statement: "SELECT * FROM").to_a
       }.to raise_error(Altertable::Lakehouse::BadRequestError)
