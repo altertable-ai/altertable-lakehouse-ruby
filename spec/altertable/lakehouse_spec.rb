@@ -275,7 +275,7 @@ RSpec.describe Altertable::Lakehouse::Client do
 
     it "raises BadRequestError on invalid SQL" do
       expect {
-        client.query(statement: "INVALID SQL !!!").to_a
+        client.query(statement: "SELECT * FROM").to_a
       }.to raise_error(Altertable::Lakehouse::BadRequestError)
     end
   end
