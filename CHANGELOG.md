@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.5.1...altertable-lakehouse/v0.6.0) (2026-06-11)
+
+
+### Features
+
+* add configurable open timeout ([#41](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/41)) ([f568a96](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/f568a96a4fcc59dd91a622c6119779e1e9171bda))
+
+
+### Bug Fixes
+
+* **api:** expose upsert API ([#42](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/42)) ([fcda808](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/fcda808db2c52a526d848f56fa3509bdb2738310))
+
 ## [0.5.1](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.5.0...altertable-lakehouse/v0.5.1) (2026-05-29)
 
 
