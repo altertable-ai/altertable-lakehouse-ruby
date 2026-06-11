@@ -39,13 +39,12 @@ module Altertable
 
       def query_all: (statement: String, ?headers: ::Hash[String, String], **untyped options) -> ::Hash[Symbol, untyped]
 
-      def upload: (
+      def upsert: (
         catalog: String,
         schema: String,
         table: String,
-        format: String,
-        mode: String,
         file_io: untyped,
+        ?mode: String?,
         ?primary_key: String?,
         ?headers: ::Hash[String, String]
       ) -> untyped

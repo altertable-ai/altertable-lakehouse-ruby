@@ -37,8 +37,7 @@ module Altertable
         
         default_headers = {
           "Authorization" => @auth_header,
-          "User-Agent" => @user_agent,
-          "Content-Type" => "application/json"
+          "User-Agent" => @user_agent
         }
 
         @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, open_timeout: @open_timeout, headers: default_headers.merge(headers))
@@ -67,7 +66,7 @@ module Altertable
           buffer = ""
           
           # Use adapter's stream capability
-          resp = @adapter.post("/query", body: req_body, headers: headers) do |chunk, _|
+          resp = @adapter.post("/query", body: req_body, headers: json_headers(headers)) do |chunk, _|
             buffer << chunk
           end
 
@@ -88,20 +87,19 @@ module Altertable
         }
       end
 
-      # POST /upload
-      def upload(catalog:, schema:, table:, format:, mode:, file_io:, primary_key: nil, headers: {})
+      # POST /upsert
+      def upsert(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {})
         params = {
           catalog: catalog,
           schema: schema,
-          table: table,
-          format: format,
-          mode: mode
+          table: table
         }
+        params[:mode] = mode if mode
         params[:primary_key] = primary_key if primary_key
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
-        resp = @adapter.post("/upload", body: body, params: params, headers: headers.merge("Content-Type" => "application/octet-stream"))
+        resp = @adapter.post("/upsert", body: body, params: params, headers: headers)
         handle_response(resp)
       end
 
@@ -189,9 +187,13 @@ module Altertable
           method, path,
           body: encode_request_body(body),
           params: query || {},
-          headers: headers
+          headers: body.nil? ? headers : json_headers(headers)
         )
         handle_response(resp)
+      end
+
+      def json_headers(headers)
+        { "Content-Type" => "application/json" }.merge(headers)
       end
 
       def encode_request_body(body)
