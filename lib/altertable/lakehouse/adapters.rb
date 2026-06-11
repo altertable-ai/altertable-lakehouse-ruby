@@ -4,9 +4,10 @@ module Altertable
       Response = Struct.new(:status, :body, :headers)
 
       class Base
-        def initialize(base_url:, timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {})
           @base_url = base_url
           @timeout = timeout
+          @open_timeout = open_timeout
           @headers = headers
         end
 
@@ -24,7 +25,7 @@ module Altertable
       end
 
       class FaradayAdapter < Base
-        def initialize(base_url:, timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {})
           super
           require "faraday"
           require "faraday/retry"
@@ -33,6 +34,7 @@ module Altertable
           @conn = Faraday.new(url: @base_url) do |f|
             @headers.each { |k, v| f.headers[k] = v }
             f.options.timeout = @timeout
+            f.options.open_timeout = @open_timeout
             f.request :retry, max: 3, interval: 0.05, backoff_factor: 2
             f.adapter Faraday.default_adapter
           end
@@ -78,13 +80,13 @@ module Altertable
       end
 
       class HttpxAdapter < Base
-        def initialize(base_url:, timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {})
           super
           require "httpx"
           # Configure retries plugin if available or implement manual retries?
           # Httpx has built-in retries via plugin.
           @client = HTTPX.plugin(:retries).with(
-            timeout: { operation_timeout: @timeout },
+            timeout: { operation_timeout: @timeout, connect_timeout: @open_timeout },
             headers: @headers,
             base_url: @base_url
           )
@@ -133,7 +135,7 @@ module Altertable
       end
 
       class NetHttpAdapter < Base
-        def initialize(base_url:, timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {})
           super
           require "net/http"
           require "uri"
@@ -164,7 +166,7 @@ module Altertable
           req.body = body if body
 
           # Net::HTTP start
-          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: @timeout, read_timeout: @timeout) do |http|
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: @open_timeout, read_timeout: @timeout) do |http|
             if block_given?
               http.request(req) do |response|
                 # Stream the body if block is given
