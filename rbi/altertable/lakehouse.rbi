@@ -96,13 +96,24 @@ module Altertable
           catalog: String,
           schema: String,
           table: String,
+          mode: String,
           file_io: T.untyped,
-          mode: T.nilable(String),
-          primary_key: T.nilable(String),
           headers: T::Hash[String, String]
         ).returns(T.untyped)
       end
-      def upsert(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {}); end
+      def upload(catalog:, schema:, table:, mode:, file_io:, headers: {}); end
+
+      sig do
+        params(
+          catalog: String,
+          schema: String,
+          table: String,
+          primary_key: String,
+          file_io: T.untyped,
+          headers: T::Hash[String, String]
+        ).returns(T.untyped)
+      end
+      def upsert(catalog:, schema:, table:, primary_key:, file_io:, headers: {}); end
 
       sig { params(query_id: String, headers: T::Hash[String, String]).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
       def get_query(query_id, headers: {}); end
