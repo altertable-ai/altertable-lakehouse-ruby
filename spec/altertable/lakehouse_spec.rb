@@ -55,9 +55,9 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "appends a row and returns ok: true" do
       table_name = "append_events_#{SecureRandom.hex(4)}"
 
-      # Ensure the table exists first via upsert (CSV create)
+      # Ensure the table exists first via upload (CSV create)
       csv = "user_id,name\n1,Alice\n"
-      client.upsert(
+      client.upload(
         catalog: "memory",
         schema: "main",
         table: table_name,
@@ -78,7 +78,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       table_name = "append_events_batch_#{SecureRandom.hex(4)}"
 
       csv = "user_id,name\n1,Alice\n"
-      client.upsert(
+      client.upload(
         catalog: "memory",
         schema: "main",
         table: table_name,
@@ -109,7 +109,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       table_name = "append_events_sync_#{SecureRandom.hex(4)}"
 
       csv = "user_id,name\n1,Alice\n"
-      client.upsert(
+      client.upload(
         catalog: "memory",
         schema: "main",
         table: table_name,
@@ -238,9 +238,9 @@ RSpec.describe Altertable::Lakehouse::Client do
       client.query(statement: "SELECT 1", headers: { "X-Trace" => "trace-1" }).to_a
     end
 
-    it "forwards per-request headers on #upsert without content type" do
+    it "forwards per-request headers on #upload without content type" do
       expect(adapter).to receive(:post).with(
-        "/upsert",
+        "/upload",
         hash_including(
           headers: {
             "X-Upload-Source" => "etl"
@@ -248,7 +248,7 @@ RSpec.describe Altertable::Lakehouse::Client do
         )
       ).and_return(ok_response)
 
-      client.upsert(
+      client.upload(
         catalog: "memory",
         schema: "main",
         table: "t",
@@ -285,13 +285,13 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
   end
 
-  # ── #upsert ──────────────────────────────────────────────────────────────────
+  # ── #upload ──────────────────────────────────────────────────────────────────
 
-  describe "#upsert" do
+  describe "#upload" do
     it "creates a table from CSV in create mode and allows querying it" do
       table_name = "upload_test_#{SecureRandom.hex(4)}"
       csv = "id,score\n10,100\n20,200\n"
-      client.upsert(
+      client.upload(
         catalog: "memory",
         schema: "main",
         table: table_name,
@@ -304,6 +304,36 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result[:rows]).to eq([
         { "id" => 10, "score" => 100 },
         { "id" => 20, "score" => 200 }
+      ])
+    end
+  end
+
+  # ── #upsert ──────────────────────────────────────────────────────────────────
+
+  describe "#upsert" do
+    it "upserts rows by primary key" do
+      table_name = "upsert_test_#{SecureRandom.hex(4)}"
+      client.upload(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        mode: "create",
+        file_io: StringIO.new("id,score\n1,100\n2,200\n")
+      )
+
+      client.upsert(
+        catalog: "memory",
+        schema: "main",
+        table: table_name,
+        primary_key: "id",
+        file_io: StringIO.new("id,score\n2,250\n3,300\n")
+      )
+
+      result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY id")
+      expect(result[:rows]).to eq([
+        { "id" => 1, "score" => 100 },
+        { "id" => 2, "score" => 250 },
+        { "id" => 3, "score" => 300 }
       ])
     end
   end

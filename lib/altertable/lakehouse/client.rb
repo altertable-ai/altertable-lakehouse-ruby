@@ -87,15 +87,29 @@ module Altertable
         }
       end
 
-      # POST /upsert
-      def upsert(catalog:, schema:, table:, file_io:, mode: nil, primary_key: nil, headers: {})
+      # POST /upload
+      def upload(catalog:, schema:, table:, mode:, file_io:, headers: {})
         params = {
           catalog: catalog,
           schema: schema,
-          table: table
+          table: table,
+          mode: mode
         }
-        params[:mode] = mode if mode
-        params[:primary_key] = primary_key if primary_key
+
+        body = file_io.respond_to?(:read) ? file_io.read : file_io
+
+        resp = @adapter.post("/upload", body: body, params: params, headers: headers)
+        handle_response(resp)
+      end
+
+      # POST /upsert
+      def upsert(catalog:, schema:, table:, primary_key:, file_io:, headers: {})
+        params = {
+          catalog: catalog,
+          schema: schema,
+          table: table,
+          primary_key: primary_key
+        }
 
         body = file_io.respond_to?(:read) ? file_io.read : file_io
 
