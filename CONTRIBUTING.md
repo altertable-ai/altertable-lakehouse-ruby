@@ -1,4 +1,4 @@
-# Contributing to altertable-lakehouse-ruby
+# Contributing to altertable-lakehouse
 
 ## Development Setup
 
