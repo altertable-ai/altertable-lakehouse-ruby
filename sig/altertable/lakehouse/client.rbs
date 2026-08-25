@@ -21,7 +21,8 @@ module Altertable
         ?open_timeout: Integer | Float?,
         ?user_agent: String?,
         ?adapter: Symbol?,
-        ?headers: ::Hash[String, String]
+        ?headers: ::Hash[String, String],
+        **untyped options
       ) -> void
 
       def append: (

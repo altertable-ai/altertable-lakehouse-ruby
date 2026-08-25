@@ -65,10 +65,11 @@ module Altertable
           open_timeout: T.nilable(T.any(Integer, Float)),
           user_agent: T.nilable(String),
           adapter: T.nilable(Symbol),
-          headers: T::Hash[String, String]
+          headers: T::Hash[String, String],
+          options: T.untyped
         ).void
       end
-      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, open_timeout: nil, user_agent: nil, adapter: nil, headers: {}); end
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, open_timeout: nil, user_agent: nil, adapter: nil, headers: {}, **options); end
 
       sig do
         params(
@@ -676,8 +677,8 @@ module Altertable
       end
 
       class Base
-        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String]).void }
-        def initialize(base_url:, timeout:, open_timeout:, headers: {}); end
+        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String], options: T.untyped).void }
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options); end
 
         sig do
           params(
@@ -714,8 +715,8 @@ module Altertable
       end
 
       class FaradayAdapter < Base
-        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String]).void }
-        def initialize(base_url:, timeout:, open_timeout:, headers: {}); end
+        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String], options: T.untyped).void }
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options); end
 
         sig do
           params(
@@ -757,8 +758,8 @@ module Altertable
       end
 
       class HttpxAdapter < Base
-        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String]).void }
-        def initialize(base_url:, timeout:, open_timeout:, headers: {}); end
+        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String], options: T.untyped).void }
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options); end
 
         sig do
           params(
@@ -800,8 +801,8 @@ module Altertable
       end
 
       class NetHttpAdapter < Base
-        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String]).void }
-        def initialize(base_url:, timeout:, open_timeout:, headers: {}); end
+        sig { params(base_url: String, timeout: T.any(Integer, Float), open_timeout: T.any(Integer, Float), headers: T::Hash[String, String], options: T.untyped).void }
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options); end
 
         sig do
           params(

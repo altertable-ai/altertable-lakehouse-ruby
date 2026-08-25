@@ -14,8 +14,9 @@ module Altertable
         @timeout: Integer | Float
         @open_timeout: Integer | Float
         @headers: ::Hash[String, String]
+        @options: ::Hash[Symbol, untyped]
 
-        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String], **untyped options) -> void
         def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
@@ -24,7 +25,7 @@ module Altertable
       class FaradayAdapter < Base
         @conn: untyped
 
-        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String], **untyped options) -> void
         def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
@@ -37,7 +38,7 @@ module Altertable
       class HttpxAdapter < Base
         @client: untyped
 
-        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String], **untyped options) -> void
         def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
@@ -50,7 +51,7 @@ module Altertable
       class NetHttpAdapter < Base
         @uri: URI::HTTP | URI::HTTPS
 
-        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String]) -> void
+        def initialize: (base_url: String, timeout: Integer | Float, open_timeout: Integer | Float, ?headers: ::Hash[String, String], **untyped options) -> void
         def get: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def post: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response
         def delete: (String path, ?body: String?, ?params: ::Hash[Symbol | String, untyped], ?headers: ::Hash[String, String]) -> Response

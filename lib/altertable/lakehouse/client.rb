@@ -12,7 +12,7 @@ module Altertable
       DEFAULT_TIMEOUT = 10
       DEFAULT_OPEN_TIMEOUT = 5
 
-      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, open_timeout: nil, user_agent: nil, adapter: nil, headers: {})
+      def initialize(username: nil, password: nil, basic_auth_token: nil, base_url: nil, timeout: nil, open_timeout: nil, user_agent: nil, adapter: nil, headers: {}, **options)
         # 1. Try passed basic_auth_token
         # 2. Try passed username/password
         # 3. Try ENV["ALTERTABLE_BASIC_AUTH_TOKEN"]
@@ -40,7 +40,7 @@ module Altertable
           "User-Agent" => @user_agent
         }
 
-        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, open_timeout: @open_timeout, headers: default_headers.merge(headers))
+        @adapter = select_adapter(adapter, base_url: @base_url, timeout: @timeout, open_timeout: @open_timeout, headers: default_headers.merge(headers), **options)
       end
 
       # POST /append
