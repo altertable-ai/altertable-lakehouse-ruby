@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.6.0...altertable-lakehouse/v0.7.0) (2026-08-26)
+
+
+### Features
+
+* pass proxy through as a raw options override ([#50](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/50)) ([f2af534](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/f2af53452b42b8421f6529d532e23546ffe80c16))
+
 ## [0.6.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.5.1...altertable-lakehouse/v0.6.0) (2026-06-30)
 
 
