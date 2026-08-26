@@ -68,23 +68,17 @@ RSpec.describe Altertable::Lakehouse::Client do
     end
 
     it "honors HTTP_PROXY by default" do
-      previous = ENV["http_proxy"]
-      ENV["http_proxy"] = "http://proxy.test:4750"
+      stub_env("http_proxy", "http://proxy.test:4750")
       client = described_class.new(**base_options, adapter: :faraday)
       conn = client.instance_variable_get(:@adapter).instance_variable_get(:@conn)
       expect(conn.proxy.uri.to_s).to eq("http://proxy.test:4750")
-    ensure
-      ENV["http_proxy"] = previous
     end
 
     it "ignores HTTP_PROXY when proxy: nil is passed explicitly" do
-      previous = ENV["http_proxy"]
-      ENV["http_proxy"] = "http://proxy.test:4750"
+      stub_env("http_proxy", "http://proxy.test:4750")
       client = described_class.new(**base_options, adapter: :faraday, proxy: nil)
       conn = client.instance_variable_get(:@adapter).instance_variable_get(:@conn)
       expect(conn.proxy).to be_nil
-    ensure
-      ENV["http_proxy"] = previous
     end
 
     it "honors a custom proxy value when provided" do

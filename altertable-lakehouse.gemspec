@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rubocop", "~> 1.50"
+  spec.add_development_dependency "stub_env"
   spec.add_development_dependency "testcontainers"
   spec.add_development_dependency "rbs"
   spec.add_development_dependency "sorbet"
