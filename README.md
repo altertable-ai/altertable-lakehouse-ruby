@@ -58,7 +58,8 @@ client = Altertable::Lakehouse::Client.new(
   password: "your_password",
   base_url: "https://api.altertable.ai", # Optional
   timeout: 10, # Optional
-  open_timeout: 5 # Optional
+  open_timeout: 5, # Optional
+  proxy: nil # Optional; omit to honor HTTP(S)_PROXY, or pass nil/a custom proxy URL to override
 )
 
 # 2. Pre-encoded Basic Auth Token

@@ -67,6 +67,26 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(conn.options.open_timeout).to eq(2)
     end
 
+    it "honors HTTP_PROXY by default" do
+      stub_env("http_proxy", "http://proxy.test:4750")
+      client = described_class.new(**base_options, adapter: :faraday)
+      conn = client.instance_variable_get(:@adapter).instance_variable_get(:@conn)
+      expect(conn.proxy.uri.to_s).to eq("http://proxy.test:4750")
+    end
+
+    it "ignores HTTP_PROXY when proxy: nil is passed explicitly" do
+      stub_env("http_proxy", "http://proxy.test:4750")
+      client = described_class.new(**base_options, adapter: :faraday, proxy: nil)
+      conn = client.instance_variable_get(:@adapter).instance_variable_get(:@conn)
+      expect(conn.proxy).to be_nil
+    end
+
+    it "honors a custom proxy value when provided" do
+      client = described_class.new(**base_options, adapter: :faraday, proxy: "http://custom.proxy:8080")
+      conn = client.instance_variable_get(:@adapter).instance_variable_get(:@conn)
+      expect(conn.proxy.uri.to_s).to eq("http://custom.proxy:8080")
+    end
+
     it "configures HTTPX connect_timeout separately from operation_timeout" do
       client = described_class.new(**base_options, adapter: :httpx, timeout: 10, open_timeout: 2)
       adapter = client.instance_variable_get(:@adapter)

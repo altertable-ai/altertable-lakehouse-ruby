@@ -4,11 +4,12 @@ module Altertable
       Response = Struct.new(:status, :body, :headers)
 
       class Base
-        def initialize(base_url:, timeout:, open_timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options)
           @base_url = base_url
           @timeout = timeout
           @open_timeout = open_timeout
           @headers = headers
+          @options = options
         end
 
         def get(path, body: nil, params: {}, headers: {}, &_block)
@@ -25,17 +26,18 @@ module Altertable
       end
 
       class FaradayAdapter < Base
-        def initialize(base_url:, timeout:, open_timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options)
           super
           require "faraday"
           require "faraday/retry"
           require "faraday/net_http"
-          
+
           @conn = Faraday.new(url: @base_url) do |f|
             @headers.each { |k, v| f.headers[k] = v }
             f.options.timeout = @timeout
             f.options.open_timeout = @open_timeout
             f.request :retry, max: 3, interval: 0.05, backoff_factor: 2
+            f.proxy = options[:proxy] if options.key?(:proxy)
             f.adapter Faraday.default_adapter
           end
         end
@@ -80,16 +82,18 @@ module Altertable
       end
 
       class HttpxAdapter < Base
-        def initialize(base_url:, timeout:, open_timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options)
           super
           require "httpx"
           # Configure retries plugin if available or implement manual retries?
           # Httpx has built-in retries via plugin.
-          @client = HTTPX.plugin(:retries).with(
+          http_options = {
             timeout: { operation_timeout: @timeout, connect_timeout: @open_timeout },
             headers: @headers,
             base_url: @base_url
-          )
+          }
+          http_options[:proxy] = options[:proxy] if options.key?(:proxy)
+          @client = HTTPX.plugin(:retries).with(**http_options)
         end
 
         def get(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
@@ -135,7 +139,7 @@ module Altertable
       end
 
       class NetHttpAdapter < Base
-        def initialize(base_url:, timeout:, open_timeout:, headers: {})
+        def initialize(base_url:, timeout:, open_timeout:, headers: {}, **options)
           super
           require "net/http"
           require "uri"
@@ -166,7 +170,9 @@ module Altertable
           req.body = body if body
 
           # Net::HTTP start
-          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: @open_timeout, read_timeout: @timeout) do |http|
+          start_args = [uri.host, uri.port]
+          start_args << @options[:proxy] if @options.key?(:proxy)
+          Net::HTTP.start(*start_args, use_ssl: uri.scheme == "https", open_timeout: @open_timeout, read_timeout: @timeout) do |http|
             if block_given?
               http.request(req) do |response|
                 # Stream the body if block is given
