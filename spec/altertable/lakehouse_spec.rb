@@ -189,6 +189,44 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result.columns).to eq(["n"])
       expect(rows).to be_empty
     end
+
+    it "raises QueryError when the mock emits an error object instead of columns" do
+      result = client.query(statement: "SELECT * FROM unknown_table")
+      yielded = []
+
+      expect {
+        result.each { |row| yielded << row }
+      }.to raise_error(Altertable::Lakehouse::QueryError) { |error|
+        expect(error.message).to include("unknown_table")
+        expect(error.line_index).to eq(1)
+      }
+
+      expect(yielded).to be_empty
+      expect(result.metadata).to include("statement" => "SELECT * FROM unknown_table")
+      expect(result.columns).to be_nil
+    end
+
+    it "raises QueryError when a later stream line is an error object" do
+      stream = [
+        { "statement" => "SELECT id" },
+        [{ "name" => "id", "type" => "INTEGER" }],
+        [1],
+        { "error" => "row conversion failed" }
+      ]
+      result = Altertable::Lakehouse::QueryResult.new(stream.each)
+      yielded = []
+
+      expect {
+        result.each { |row| yielded << row }
+      }.to raise_error(Altertable::Lakehouse::QueryError) { |error|
+        expect(error.message).to eq("row conversion failed")
+        expect(error.line_index).to eq(3)
+      }
+
+      expect(yielded).to eq([{ "id" => 1 }])
+      expect(result.columns).to eq(["id"])
+      expect(result.metadata).to include("statement" => "SELECT id")
+    end
   end
 
   # ── #query_all ───────────────────────────────────────────────────────────────
@@ -203,6 +241,12 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result[:metadata]["statement"]).to eq("SELECT 7 AS x, 'hello' AS y")
       expect(result[:columns]).to eq(["x", "y"])
       expect(result[:rows]).to eq([{ "x" => 7, "y" => "hello" }])
+    end
+
+    it "raises QueryError instead of accumulating a stream error as rows" do
+      expect {
+        client.query_all(statement: "SELECT * FROM unknown_table")
+      }.to raise_error(Altertable::Lakehouse::QueryError, /unknown_table/)
     end
 
     it "forwards the cache option" do

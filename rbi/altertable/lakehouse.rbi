@@ -47,6 +47,27 @@ module Altertable
     class TimeoutError < Error; end
     class SerializationError < Error; end
     class ParseError < Error; end
+
+    class QueryError < Error
+      sig { returns(Integer) }
+      def line_index; end
+
+      sig do
+        params(
+          message: String,
+          line_index: Integer,
+          operation: T.nilable(String),
+          http_method: T.nilable(String),
+          http_path: T.nilable(String),
+          status_code: T.nilable(Integer),
+          retriable: T::Boolean,
+          request_id: T.nilable(String),
+          cause: T.nilable(Exception)
+        ).void
+      end
+      def initialize(message, line_index:, operation: nil, http_method: nil, http_path: nil, status_code: nil, retriable: false, request_id: nil, cause: nil); end
+    end
+
     class ApiError < Error; end
     class ConfigurationError < Error; end
 

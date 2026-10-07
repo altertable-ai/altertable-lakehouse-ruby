@@ -39,6 +39,22 @@ module Altertable
     class ParseError < Error
     end
 
+    class QueryError < Error
+      attr_reader line_index: Integer
+
+      def initialize: (
+        String message,
+        line_index: Integer,
+        ?operation: String?,
+        ?http_method: String?,
+        ?http_path: String?,
+        ?status_code: Integer?,
+        ?retriable: bool,
+        ?request_id: String?,
+        ?cause: Exception?
+      ) -> void
+    end
+
     class ApiError < Error
     end
 
