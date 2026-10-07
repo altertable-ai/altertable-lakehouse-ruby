@@ -282,7 +282,7 @@ module Altertable
       include Enumerable
 
       # metadata: the stream header object (first NDJSON line)
-      # columns:  array of column name strings (second NDJSON line)
+      # columns:  array of column names or typed column descriptors (second NDJSON line)
       attr_reader :metadata, :columns
 
       def initialize(enum)
@@ -304,7 +304,7 @@ module Altertable
           when 0
             @metadata = item
           when 1
-            @columns = item
+            @columns = normalize_columns(item)
           else
             if @columns.is_a?(Array) && item.is_a?(Array)
               block.call(@columns.zip(item).to_h)
@@ -313,6 +313,19 @@ module Altertable
             end
           end
           line_index += 1
+        end
+      end
+
+      private
+
+      # The query service emits typed column descriptors, such as
+      # { "name" => "id", "type" => "INTEGER" }. Keep the public result
+      # shape stable by exposing names and using them as row keys.
+      def normalize_columns(columns)
+        return columns unless columns.is_a?(Array)
+
+        columns.map do |column|
+          column.is_a?(Hash) && column.key?("name") ? column["name"] : column
         end
       end
     end

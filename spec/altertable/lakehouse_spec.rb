@@ -143,6 +143,18 @@ RSpec.describe Altertable::Lakehouse::Client do
   # ── #query ───────────────────────────────────────────────────────────────────
 
   describe "#query (streaming)" do
+    it "normalizes typed column descriptors to column names" do
+      stream = [
+        { "statement" => "SELECT 1 AS id" },
+        [{ "name" => "id", "type" => "INTEGER" }],
+        [1]
+      ]
+      result = Altertable::Lakehouse::QueryResult.new(stream.each)
+
+      expect(result.to_a).to eq([{ "id" => 1 }])
+      expect(result.columns).to eq(["id"])
+    end
+
     it "parses the header, column names and data rows from a SELECT" do
       result = client.query(statement: "SELECT 42 AS answer")
       rows = result.to_a
@@ -173,8 +185,8 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
       rows = result.to_a
 
-      # The mock returns [] as the columns array when DuckDB produces no batches
-      expect(result.columns).to eq([])
+      # Column metadata is present even when the query produces no rows.
+      expect(result.columns).to eq(["n"])
       expect(rows).to be_empty
     end
   end
@@ -200,6 +212,15 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
 
       expect(result[:rows]).to eq([{ "cached_value" => 1 }])
+    end
+
+    it "serializes named bind parameters" do
+      request = Altertable::Lakehouse::Models::QueryRequest.new(
+        statement: "SELECT $min_age",
+        params: { "min_age" => 25 }
+      )
+
+      expect(request.to_h).to include(params: { "min_age" => 25 })
     end
   end
 

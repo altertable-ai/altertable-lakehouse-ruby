@@ -54,9 +54,9 @@ module Altertable
       end
 
       class QueryRequest < Request
-        attr_reader :statement, :catalog, :schema, :session_id, :compute_size, :sanitize, :limit, :offset, :timezone, :ephemeral, :visible, :requested_by, :query_id, :cache
+        attr_reader :statement, :catalog, :schema, :session_id, :compute_size, :sanitize, :limit, :offset, :timezone, :ephemeral, :visible, :requested_by, :query_id, :cache, :params
 
-        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil, cache: nil)
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil, cache: nil, params: nil)
           @statement = statement
           @catalog = catalog
           @schema = schema
@@ -71,6 +71,7 @@ module Altertable
           @requested_by = requested_by
           @query_id = query_id
           @cache = cache
+          @params = params
         end
 
         def to_h
@@ -88,6 +89,7 @@ module Altertable
           h[:requested_by] = @requested_by if @requested_by
           h[:query_id] = @query_id if @query_id
           h[:cache] = @cache unless @cache.nil?
+          h[:params] = @params unless @params.nil?
           h
         end
       end

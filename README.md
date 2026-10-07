@@ -40,7 +40,8 @@ client.append(
 
 # Query data
 result = client.query_all(
-  statement: "SELECT * FROM main.public.events LIMIT 10"
+  statement: "SELECT * FROM main.public.events WHERE age >= $min_age",
+  params: { "min_age" => 25 }
 )
 result[:rows].each { |row| puts row }
 ```
