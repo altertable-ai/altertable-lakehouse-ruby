@@ -292,14 +292,24 @@ module Altertable
       end
 
       def each(&block)
-        # The real mock streams:
-        #   line 1: { "statement":…, "session_id":…, … }   (header object)
-        #   line 2: ["col1", "col2", …]                     (column names array)
-        #   line 3+: [val1, val2, …]                        (row value arrays)
-        # We zip each row array with the column names to produce a Hash.
+        # The mock streams NDJSON:
+        #   line 1: metadata object
+        #   line 2: column descriptors, or { "error": string }
+        #   line 3+: row arrays, or { "error": string }
+        # Row arrays are zipped with column names into hashes.
         line_index = 0
 
         @enum.each do |item|
+          if line_index.positive? && (message = stream_error_message(item))
+            raise QueryError.new(
+              message,
+              line_index: line_index,
+              operation: "query",
+              http_method: "POST",
+              http_path: "/query"
+            )
+          end
+
           case line_index
           when 0
             @metadata = item
@@ -317,6 +327,15 @@ module Altertable
       end
 
       private
+
+      # A post-metadata JSON object with an `error` string is a stream failure,
+      # not column schema or a row.
+      def stream_error_message(item)
+        return unless item.is_a?(Hash)
+
+        message = item["error"]
+        message if message.is_a?(String)
+      end
 
       # The query service emits typed column descriptors, such as
       # { "name" => "id", "type" => "INTEGER" }. Keep the public result
