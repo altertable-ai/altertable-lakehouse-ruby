@@ -185,8 +185,8 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
       rows = result.to_a
 
-      # The mock returns [] as the columns array when DuckDB produces no batches
-      expect(result.columns).to eq([])
+      # Column metadata is present even when the query produces no rows.
+      expect(result.columns).to eq(["n"])
       expect(rows).to be_empty
     end
   end
