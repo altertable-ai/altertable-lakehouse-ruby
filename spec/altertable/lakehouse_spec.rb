@@ -143,6 +143,18 @@ RSpec.describe Altertable::Lakehouse::Client do
   # ── #query ───────────────────────────────────────────────────────────────────
 
   describe "#query (streaming)" do
+    it "normalizes typed column descriptors to column names" do
+      stream = [
+        { "statement" => "SELECT 1 AS id" },
+        [{ "name" => "id", "type" => "INTEGER" }],
+        [1]
+      ]
+      result = Altertable::Lakehouse::QueryResult.new(stream.each)
+
+      expect(result.to_a).to eq([{ "id" => 1 }])
+      expect(result.columns).to eq(["id"])
+    end
+
     it "parses the header, column names and data rows from a SELECT" do
       result = client.query(statement: "SELECT 42 AS answer")
       rows = result.to_a
