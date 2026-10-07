@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 
 * Support named and positional bind values through `QueryRequest#params`.
 
+## [0.8.1](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.8.0...altertable-lakehouse/v0.8.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **error:** implement proper query error parsing ([#54](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/54)) ([86f6512](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/86f6512cfc6c58822981d0ac4824b7479dd1f2f4))
+
 ## [0.8.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.7.0...altertable-lakehouse/v0.8.0) (2026-10-07)
 
 
