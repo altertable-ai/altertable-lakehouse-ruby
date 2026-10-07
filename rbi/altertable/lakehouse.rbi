@@ -300,6 +300,9 @@ module Altertable
         sig { returns(T.nilable(T::Boolean)) }
         def cache; end
 
+        sig { returns(T.nilable(T.any(T::Hash[String, T.untyped], T::Array[T.untyped]))) }
+        def params; end
+
         sig do
           params(
             statement: String,
@@ -315,10 +318,11 @@ module Altertable
             visible: T.nilable(T::Boolean),
             requested_by: T.nilable(String),
             query_id: T.nilable(String),
-            cache: T.nilable(T::Boolean)
+            cache: T.nilable(T::Boolean),
+            params: T.nilable(T.any(T::Hash[String, T.untyped], T::Array[T.untyped]))
           ).void
         end
-        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil, cache: nil); end
+        def initialize(statement:, catalog: nil, schema: nil, session_id: nil, compute_size: nil, sanitize: nil, limit: nil, offset: nil, timezone: nil, ephemeral: nil, visible: nil, requested_by: nil, query_id: nil, cache: nil, params: nil); end
 
         sig { returns(T::Hash[Symbol, T.untyped]) }
         def to_h; end

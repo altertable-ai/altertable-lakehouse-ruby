@@ -45,6 +45,7 @@ module Altertable
         attr_reader requested_by: String?
         attr_reader query_id: String?
         attr_reader cache: bool?
+        attr_reader params: (::Hash[String, untyped] | ::Array[untyped])?
 
         def initialize: (
           statement: String,
@@ -60,7 +61,8 @@ module Altertable
           ?visible: bool?,
           ?requested_by: String?,
           ?query_id: String?,
-          ?cache: bool?
+          ?cache: bool?,
+          ?params: (::Hash[String, untyped] | ::Array[untyped])?
         ) -> void
 
         def to_h: () -> ::Hash[Symbol, untyped]

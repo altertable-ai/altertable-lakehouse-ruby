@@ -201,6 +201,15 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       expect(result[:rows]).to eq([{ "cached_value" => 1 }])
     end
+
+    it "serializes named bind parameters" do
+      request = Altertable::Lakehouse::Models::QueryRequest.new(
+        statement: "SELECT $min_age",
+        params: { "min_age" => 25 }
+      )
+
+      expect(request.to_h).to include(params: { "min_age" => 25 })
+    end
   end
 
   # ── custom headers ───────────────────────────────────────────────────────────
