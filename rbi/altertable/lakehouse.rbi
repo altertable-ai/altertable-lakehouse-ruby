@@ -110,7 +110,7 @@ module Altertable
       sig { params(statement: String, headers: T::Hash[String, String], options: T.untyped).returns(::Altertable::Lakehouse::QueryResult) }
       def query(statement:, headers: {}, **options); end
 
-      sig { params(statement: String, headers: T::Hash[String, String], options: T.untyped).returns(T::Hash[Symbol, T.untyped]).returns(T::Hash[Symbol, T.untyped]) }
+      sig { params(statement: String, headers: T::Hash[String, String], options: T.untyped).returns(T::Hash[Symbol, T.untyped]) }
       def query_all(statement:, headers: {}, **options); end
 
       sig do
@@ -204,13 +204,27 @@ module Altertable
       def handle_response(resp); end
     end
 
+    class ColumnDescriptor < Hash
+      extend T::Generic
+
+      K = type_member { { fixed: String } }
+      V = type_member { { fixed: String } }
+      Elem = type_member { { fixed: [String, String] } }
+
+      sig { returns(String) }
+      def name; end
+
+      sig { returns(String) }
+      def type; end
+    end
+
     class QueryResult
       include Enumerable
 
       sig { returns(T.untyped) }
       def metadata; end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.nilable(T::Array[::Altertable::Lakehouse::ColumnDescriptor])) }
       def columns; end
 
       sig { params(enum: T.untyped).void }

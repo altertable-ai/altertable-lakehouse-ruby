@@ -278,17 +278,28 @@ module Altertable
       end
     end
 
+    class ColumnDescriptor < Hash
+      def name
+        self["name"]
+      end
+
+      def type
+        self["type"]
+      end
+    end
+
     class QueryResult
       include Enumerable
 
       # metadata: the stream header object (first NDJSON line)
-      # columns:  array of column names or typed column descriptors (second NDJSON line)
+      # columns:  ColumnDescriptor array (second NDJSON line)
       attr_reader :metadata, :columns
 
       def initialize(enum)
         @enum = enum
         @metadata = nil
         @columns = nil
+        @column_names = nil
       end
 
       def each(&block)
@@ -314,10 +325,11 @@ module Altertable
           when 0
             @metadata = item
           when 1
-            @columns = normalize_columns(item)
+            @columns = column_descriptors(item)
+            @column_names = @columns.map(&:name)
           else
-            if @columns.is_a?(Array) && item.is_a?(Array)
-              block.call(@columns.zip(item).to_h)
+            if item.is_a?(Array)
+              block.call(@column_names.zip(item).to_h)
             else
               block.call(item)
             end
@@ -337,15 +349,29 @@ module Altertable
         message if message.is_a?(String)
       end
 
-      # The query service emits typed column descriptors, such as
-      # { "name" => "id", "type" => "INTEGER" }. Keep the public result
-      # shape stable by exposing names and using them as row keys.
-      def normalize_columns(columns)
-        return columns unless columns.is_a?(Array)
+      def column_descriptors(columns)
+        unless columns.is_a?(Array)
+          raise column_parse_error("expected an array of column objects, got #{columns.inspect}")
+        end
 
         columns.map do |column|
-          column.is_a?(Hash) && column.key?("name") ? column["name"] : column
+          name = column["name"] if column.is_a?(Hash)
+          type = column["type"] if column.is_a?(Hash)
+          unless name.is_a?(String) && type.is_a?(String)
+            raise column_parse_error("expected a { \"name\", \"type\" } column object, got #{column.inspect}")
+          end
+
+          ColumnDescriptor["name" => name, "type" => type]
         end
+      end
+
+      def column_parse_error(message)
+        ParseError.new(
+          "Malformed /query column line: #{message}",
+          operation: "query",
+          http_method: "POST",
+          http_path: "/query"
+        )
       end
     end
 
