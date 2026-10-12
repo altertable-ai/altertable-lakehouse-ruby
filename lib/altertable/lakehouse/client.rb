@@ -278,15 +278,7 @@ module Altertable
       end
     end
 
-    class ColumnDescriptor < Hash
-      def name
-        self["name"]
-      end
-
-      def type
-        self["type"]
-      end
-    end
+    ColumnDescriptor = Data.define(:name, :type)
 
     class QueryResult
       include Enumerable
@@ -361,7 +353,7 @@ module Altertable
             raise column_parse_error("expected a { \"name\", \"type\" } column object, got #{column.inspect}")
           end
 
-          ColumnDescriptor["name" => name, "type" => type]
+          ColumnDescriptor.new(name: name, type: type)
         end
       end
 

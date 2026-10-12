@@ -103,9 +103,13 @@ module Altertable
       def handle_response: (Adapters::Response resp) -> untyped
     end
 
-    class ColumnDescriptor < ::Hash[String, String]
-      def name: () -> String
-      def type: () -> String
+    class ColumnDescriptor < ::Data
+      attr_reader name: String
+      attr_reader type: String
+
+      def self.new: (name: String, type: String) -> instance
+                  | (String name, String type) -> instance
+      def to_h: () -> { name: String, type: String }
     end
 
     class QueryResult
