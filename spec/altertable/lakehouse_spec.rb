@@ -143,7 +143,7 @@ RSpec.describe Altertable::Lakehouse::Client do
   # ── #query ───────────────────────────────────────────────────────────────────
 
   describe "#query (streaming)" do
-    it "normalizes typed column descriptors to column names" do
+    it "exposes typed column descriptors and keys rows by column name" do
       stream = [
         { "statement" => "SELECT 1 AS id" },
         [{ "name" => "id", "type" => "INTEGER" }],
@@ -152,16 +152,51 @@ RSpec.describe Altertable::Lakehouse::Client do
       result = Altertable::Lakehouse::QueryResult.new(stream.each)
 
       expect(result.to_a).to eq([{ "id" => 1 }])
-      expect(result.columns).to eq(["id"])
+      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
+
+      column = result.columns.first
+      expect(column).to be_a(Altertable::Lakehouse::ColumnDescriptor)
+      expect(column).to be_a(Hash)
+      expect(column.name).to eq("id")
+      expect(column.type).to eq("INTEGER")
+      expect(column["name"]).to eq("id")
     end
 
-    it "parses the header, column names and data rows from a SELECT" do
+    it "keeps only name and type from column objects" do
+      stream = [
+        { "statement" => "SELECT 1 AS id" },
+        [{ "name" => "id", "type" => "INTEGER", "nullable" => false }]
+      ]
+      result = Altertable::Lakehouse::QueryResult.new(stream.each)
+      result.to_a
+
+      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
+    end
+
+    [
+      ["a bare column name", ["id"]],
+      ["a column object without type", [{ "name" => "id" }]],
+      ["a column object with a non-string name", [{ "name" => 1, "type" => "INTEGER" }]],
+      ["a non-array column line", { "name" => "id", "type" => "INTEGER" }]
+    ].each do |description, columns_line|
+      it "raises ParseError on #{description}" do
+        stream = [{ "statement" => "SELECT 1 AS id" }, columns_line, [1]]
+        result = Altertable::Lakehouse::QueryResult.new(stream.each)
+
+        expect { result.to_a }.to raise_error(Altertable::Lakehouse::ParseError, /Malformed \/query column line/) { |error|
+          expect(error.operation).to eq("query")
+          expect(error.http_path).to eq("/query")
+        }
+      end
+    end
+
+    it "parses the header, typed columns and data rows from a SELECT" do
       result = client.query(statement: "SELECT 42 AS answer")
       rows = result.to_a
 
       expect(result.metadata).to be_a(Hash)
       expect(result.metadata["statement"]).to eq("SELECT 42 AS answer")
-      expect(result.columns).to eq(["answer"])
+      expect(result.columns).to eq([{ "name" => "answer", "type" => "INTEGER" }])
       expect(rows.length).to eq(1)
       expect(rows[0]).to eq({ "answer" => 42 })
     end
@@ -172,7 +207,10 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
       rows = result.to_a
 
-      expect(result.columns).to eq(["id", "val"])
+      expect(result.columns).to eq([
+        { "name" => "id", "type" => "INTEGER" },
+        { "name" => "val", "type" => "VARCHAR" }
+      ])
       expect(rows.length).to eq(3)
       expect(rows[0]).to eq({ "id" => 1, "val" => "a" })
       expect(rows[1]).to eq({ "id" => 2, "val" => "b" })
@@ -186,7 +224,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       rows = result.to_a
 
       # Column metadata is present even when the query produces no rows.
-      expect(result.columns).to eq(["n"])
+      expect(result.columns).to eq([{ "name" => "n", "type" => "INTEGER" }])
       expect(rows).to be_empty
     end
 
@@ -224,7 +262,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       }
 
       expect(yielded).to eq([{ "id" => 1 }])
-      expect(result.columns).to eq(["id"])
+      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
       expect(result.metadata).to include("statement" => "SELECT id")
     end
   end
@@ -239,7 +277,11 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       expect(result[:metadata]).to be_a(Hash)
       expect(result[:metadata]["statement"]).to eq("SELECT 7 AS x, 'hello' AS y")
-      expect(result[:columns]).to eq(["x", "y"])
+      expect(result[:columns]).to eq([
+        { "name" => "x", "type" => "INTEGER" },
+        { "name" => "y", "type" => "VARCHAR" }
+      ])
+      expect(result[:columns].map(&:type)).to eq(["INTEGER", "VARCHAR"])
       expect(result[:rows]).to eq([{ "x" => 7, "y" => "hello" }])
     end
 
@@ -288,7 +330,7 @@ RSpec.describe Altertable::Lakehouse::Client do
     it "forwards per-request headers on #query" do
       stream_response = Altertable::Lakehouse::Adapters::Response.new(
         200,
-        "{\"statement\":\"SELECT 1\"}\n[\"n\"]\n[1]\n",
+        "{\"statement\":\"SELECT 1\"}\n[{\"name\":\"n\",\"type\":\"INTEGER\"}]\n[1]\n",
         {}
       )
 
@@ -296,7 +338,7 @@ RSpec.describe Altertable::Lakehouse::Client do
         "/query",
         hash_including(headers: hash_including("Content-Type" => "application/json", "X-Trace" => "trace-1"))
       ).and_yield("{\"statement\":\"SELECT 1\"}\n", nil)
-        .and_yield("[\"n\"]\n", nil)
+        .and_yield("[{\"name\":\"n\",\"type\":\"INTEGER\"}]\n", nil)
         .and_yield("[1]\n", nil)
         .and_return(stream_response)
 
@@ -365,7 +407,10 @@ RSpec.describe Altertable::Lakehouse::Client do
       )
 
       result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY id")
-      expect(result[:columns]).to eq(["id", "score"])
+      expect(result[:columns]).to eq([
+        { "name" => "id", "type" => "BIGINT" },
+        { "name" => "score", "type" => "BIGINT" }
+      ])
       expect(result[:rows]).to eq([
         { "id" => 10, "score" => 100 },
         { "id" => 20, "score" => 200 }

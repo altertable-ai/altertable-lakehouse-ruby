@@ -124,7 +124,8 @@ result = client.query_all(
 )
 
 puts result[:metadata] # Hash
-puts result[:columns]  # Array of columns
+puts result[:columns]  # Array of ColumnDescriptor ({ "name" => String, "type" => String })
+puts result[:columns].first.type # e.g. "INTEGER"; also result[:columns].first["type"]
 result[:rows].each do |row|
   puts row
 end

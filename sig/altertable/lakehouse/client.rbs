@@ -103,18 +103,30 @@ module Altertable
       def handle_response: (Adapters::Response resp) -> untyped
     end
 
+    class ColumnDescriptor < ::Hash[String, String]
+      def name: () -> String
+      def type: () -> String
+    end
+
     class QueryResult
       include Enumerable
 
       @enum: Enumerator[untyped, untyped]
       @metadata: untyped
-      @columns: untyped
+      @columns: Array[ColumnDescriptor]?
+      @column_names: Array[String]?
 
       attr_reader metadata: untyped
-      attr_reader columns: untyped
+      attr_reader columns: Array[ColumnDescriptor]?
 
       def initialize: (Enumerator[untyped, untyped] enum) -> void
       def each: () { (untyped) -> void } -> void
+
+      private
+
+      def stream_error_message: (untyped item) -> String?
+      def column_descriptors: (untyped columns) -> Array[ColumnDescriptor]
+      def column_parse_error: (String message) -> ParseError
     end
   end
 end
