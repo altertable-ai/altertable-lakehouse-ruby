@@ -9,6 +9,10 @@ All notable changes to this project will be documented in this file.
 * Support named and positional bind values through `QueryRequest#params`.
 * Typed `column.name` and `column.type` readers on query columns. Columns are still hashes, so `column["name"]` and `column["type"]` keep working.
 
+### Changed
+
+* Require Ruby 3.2 or newer. CI already only tested 3.2+.
+
 ### Fixed
 
 * `QueryResult#columns` and `query_all[:columns]` return the typed column descriptors (`{ "name", "type" }`) again instead of bare names; rows stay keyed by column name.

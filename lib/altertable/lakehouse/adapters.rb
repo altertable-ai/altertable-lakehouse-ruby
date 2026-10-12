@@ -146,16 +146,16 @@ module Altertable
           @uri = URI.parse(@base_url)
         end
 
-        def get(path, body: nil, params: {}, headers: {}, &block) # rubocop:disable Lint/UnusedMethodArgument
-          request(Net::HTTP::Get, path, params: params, headers: headers, &block)
+        def get(path, body: nil, params: {}, headers: {}, &) # rubocop:disable Lint/UnusedMethodArgument
+          request(Net::HTTP::Get, path, params: params, headers: headers, &)
         end
 
-        def post(path, body: nil, params: {}, headers: {}, &block)
-          request(Net::HTTP::Post, path, body: body, params: params, headers: headers, &block)
+        def post(path, body: nil, params: {}, headers: {}, &)
+          request(Net::HTTP::Post, path, body: body, params: params, headers: headers, &)
         end
 
-        def delete(path, body: nil, params: {}, headers: {}, &block) # rubocop:disable Lint/UnusedMethodArgument
-          request(Net::HTTP::Delete, path, params: params, headers: headers, &block)
+        def delete(path, body: nil, params: {}, headers: {}, &) # rubocop:disable Lint/UnusedMethodArgument
+          request(Net::HTTP::Delete, path, params: params, headers: headers, &)
         end
 
         private
