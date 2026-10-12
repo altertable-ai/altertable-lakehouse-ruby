@@ -152,14 +152,13 @@ RSpec.describe Altertable::Lakehouse::Client do
       result = Altertable::Lakehouse::QueryResult.new(stream.each)
 
       expect(result.to_a).to eq([{ "id" => 1 }])
-      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
+      expect(result.columns).to eq([Altertable::Lakehouse::ColumnDescriptor.new(name: "id", type: "INTEGER")])
 
       column = result.columns.first
       expect(column).to be_a(Altertable::Lakehouse::ColumnDescriptor)
-      expect(column).to be_a(Hash)
+      expect(column).to be_frozen
       expect(column.name).to eq("id")
       expect(column.type).to eq("INTEGER")
-      expect(column["name"]).to eq("id")
     end
 
     it "keeps only name and type from column objects" do
@@ -170,7 +169,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       result = Altertable::Lakehouse::QueryResult.new(stream.each)
       result.to_a
 
-      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
+      expect(result.columns).to eq([Altertable::Lakehouse::ColumnDescriptor.new(name: "id", type: "INTEGER")])
     end
 
     [
@@ -196,7 +195,7 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       expect(result.metadata).to be_a(Hash)
       expect(result.metadata["statement"]).to eq("SELECT 42 AS answer")
-      expect(result.columns).to eq([{ "name" => "answer", "type" => "INTEGER" }])
+      expect(result.columns).to eq([Altertable::Lakehouse::ColumnDescriptor.new(name: "answer", type: "INTEGER")])
       expect(rows.length).to eq(1)
       expect(rows[0]).to eq({ "answer" => 42 })
     end
@@ -208,8 +207,8 @@ RSpec.describe Altertable::Lakehouse::Client do
       rows = result.to_a
 
       expect(result.columns).to eq([
-        { "name" => "id", "type" => "INTEGER" },
-        { "name" => "val", "type" => "VARCHAR" }
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "id", type: "INTEGER"),
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "val", type: "VARCHAR")
       ])
       expect(rows.length).to eq(3)
       expect(rows[0]).to eq({ "id" => 1, "val" => "a" })
@@ -224,7 +223,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       rows = result.to_a
 
       # Column metadata is present even when the query produces no rows.
-      expect(result.columns).to eq([{ "name" => "n", "type" => "INTEGER" }])
+      expect(result.columns).to eq([Altertable::Lakehouse::ColumnDescriptor.new(name: "n", type: "INTEGER")])
       expect(rows).to be_empty
     end
 
@@ -262,7 +261,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       }
 
       expect(yielded).to eq([{ "id" => 1 }])
-      expect(result.columns).to eq([{ "name" => "id", "type" => "INTEGER" }])
+      expect(result.columns).to eq([Altertable::Lakehouse::ColumnDescriptor.new(name: "id", type: "INTEGER")])
       expect(result.metadata).to include("statement" => "SELECT id")
     end
   end
@@ -278,8 +277,8 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(result[:metadata]).to be_a(Hash)
       expect(result[:metadata]["statement"]).to eq("SELECT 7 AS x, 'hello' AS y")
       expect(result[:columns]).to eq([
-        { "name" => "x", "type" => "INTEGER" },
-        { "name" => "y", "type" => "VARCHAR" }
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "x", type: "INTEGER"),
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "y", type: "VARCHAR")
       ])
       expect(result[:columns].map(&:type)).to eq(["INTEGER", "VARCHAR"])
       expect(result[:rows]).to eq([{ "x" => 7, "y" => "hello" }])
@@ -408,8 +407,8 @@ RSpec.describe Altertable::Lakehouse::Client do
 
       result = client.query_all(statement: "SELECT * FROM #{table_name} ORDER BY id")
       expect(result[:columns]).to eq([
-        { "name" => "id", "type" => "BIGINT" },
-        { "name" => "score", "type" => "BIGINT" }
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "id", type: "BIGINT"),
+        Altertable::Lakehouse::ColumnDescriptor.new(name: "score", type: "BIGINT")
       ])
       expect(result[:rows]).to eq([
         { "id" => 10, "score" => 100 },

@@ -204,13 +204,7 @@ module Altertable
       def handle_response(resp); end
     end
 
-    class ColumnDescriptor < Hash
-      extend T::Generic
-
-      K = type_member { { fixed: String } }
-      V = type_member { { fixed: String } }
-      Elem = type_member { { fixed: [String, String] } }
-
+    class ColumnDescriptor < Data
       sig { returns(String) }
       def name; end
 
