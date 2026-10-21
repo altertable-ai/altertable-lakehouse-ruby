@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 * Support named and positional bind values through `QueryRequest#params`.
 * `ColumnDescriptor` value objects (`Data`) for query columns, with `name` and `type` readers.
+* `QueryLogResponse` exposes `threads`, `fingerprint`, `session_catalog`, and `session_schema`.
 
 ### Changed
 
@@ -15,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+* `QueryLogResponse#progress` is no longer always `nil`.
 * `QueryResult#columns` and `query_all[:columns]` return typed column descriptors again instead of bare names; rows stay keyed by column name.
 * A malformed `/query` column line (anything other than an array of `{ "name", "type" }` string objects) now raises `ParseError` instead of passing through untyped.
 

@@ -133,10 +133,14 @@ module Altertable
         end
       end
       
-      class QueryLogResponse < Request
-        attr_reader :uuid, :start_time, :end_time, :duration_ms, :query, :session_id, :client_interface, :error, :stats, :progress, :visible, :requested_by, :user_agent
+      QueryProgress = Data.define(:percentage, :rows_processed, :total_rows)
 
-        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, progress:, visible:, requested_by:, user_agent:)
+      class QueryLogResponse < Request
+        attr_reader :uuid, :start_time, :end_time, :duration_ms, :query, :session_id, :client_interface, :error, :stats, :visible, :requested_by, :user_agent,
+                    :threads, :fingerprint, :session_catalog, :session_schema
+
+        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:,
+                       threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil)
           @uuid = uuid
           @start_time = start_time
           @end_time = end_time
@@ -146,12 +150,20 @@ module Altertable
           @client_interface = client_interface
           @error = error
           @stats = stats
-          @progress = progress
           @visible = visible
           @requested_by = requested_by
           @user_agent = user_agent
+          @threads = threads
+          @fingerprint = fingerprint
+          @session_catalog = session_catalog
+          @session_schema = session_schema
+          @percentage = percentage
+          @rows_processed = rows_processed
+          @total_rows = total_rows
         end
-        
+
+        def progress = @percentage && QueryProgress.new(percentage: @percentage.to_f, rows_processed: @rows_processed, total_rows: @total_rows)
+
         def self.from_h(h)
            new(
              uuid: h["uuid"],
@@ -163,10 +175,16 @@ module Altertable
              client_interface: h["client_interface"],
              error: h["error"],
              stats: h["stats"],
-             progress: h["progress"],
              visible: h["visible"],
              requested_by: h["requested_by"],
-             user_agent: h["user_agent"]
+             user_agent: h["user_agent"],
+             threads: h["threads"],
+             fingerprint: h["fingerprint"],
+             session_catalog: h["session_catalog"],
+             session_schema: h["session_schema"],
+             percentage: h["percentage"],
+             rows_processed: h["rows_processed"],
+             total_rows: h["total_rows"]
            )
         end
       end
