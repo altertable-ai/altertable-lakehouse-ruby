@@ -108,7 +108,7 @@ module Altertable
         attr_reader client_interface: String
         attr_reader error: untyped
         attr_reader stats: untyped
-        def progress: () -> QueryProgress?
+        def progress: () -> untyped
         attr_reader visible: bool
         attr_reader requested_by: String?
         attr_reader user_agent: String?
@@ -134,6 +134,7 @@ module Altertable
           ?fingerprint: String?,
           ?session_catalog: String?,
           ?session_schema: String?,
+          ?progress: untyped,
           ?percentage: Numeric?,
           ?rows_processed: Integer?,
           ?total_rows: Integer?

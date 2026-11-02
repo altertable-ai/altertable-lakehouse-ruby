@@ -50,4 +50,21 @@ RSpec.describe Altertable::Lakehouse::Models::QueryLogResponse do
     expect(log.progress).to be_nil
     expect(log.duration_ms).to eq(2_617)
   end
+
+  it "accepts the legacy progress keyword, including nil" do
+    attributes = base.reject { |key, _| %w[threads fingerprint session_catalog session_schema].include?(key) }
+      .transform_keys(&:to_sym)
+    legacy = { percentage: 25, rows_processed: 1, total_rows: 4 }
+
+    expect(described_class.new(**attributes, progress: nil).progress).to be_nil
+    expect(described_class.new(**attributes, progress: legacy).progress).to equal(legacy)
+    expect(described_class.new(**attributes, progress: legacy, percentage: 0,
+                              rows_processed: 0, total_rows: 4).progress.percentage).to eq(0.0)
+  end
+
+  it "preserves nested progress when top-level fields are absent" do
+    legacy = { "percentage" => 25, "rows_processed" => 1, "total_rows" => 4 }
+
+    expect(described_class.from_h(base.merge("progress" => legacy)).progress).to equal(legacy)
+  end
 end

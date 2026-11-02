@@ -140,7 +140,7 @@ module Altertable
                     :threads, :fingerprint, :session_catalog, :session_schema
 
         def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:,
-                       threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil)
+                       threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil, progress: nil)
           @uuid = uuid
           @start_time = start_time
           @end_time = end_time
@@ -157,12 +157,17 @@ module Altertable
           @fingerprint = fingerprint
           @session_catalog = session_catalog
           @session_schema = session_schema
+          @progress = progress
           @percentage = percentage
           @rows_processed = rows_processed
           @total_rows = total_rows
         end
 
-        def progress = @percentage && QueryProgress.new(percentage: @percentage.to_f, rows_processed: @rows_processed, total_rows: @total_rows)
+        def progress
+          return @progress if @percentage.nil?
+
+          QueryProgress.new(percentage: @percentage.to_f, rows_processed: @rows_processed, total_rows: @total_rows)
+        end
 
         def self.from_h(h)
            new(
@@ -182,6 +187,7 @@ module Altertable
              fingerprint: h["fingerprint"],
              session_catalog: h["session_catalog"],
              session_schema: h["session_schema"],
+             progress: h["progress"],
              percentage: h["percentage"],
              rows_processed: h["rows_processed"],
              total_rows: h["total_rows"]
