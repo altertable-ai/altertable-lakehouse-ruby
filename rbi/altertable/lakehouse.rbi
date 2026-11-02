@@ -498,7 +498,7 @@ module Altertable
             total_rows: T.nilable(Integer)
           ).void
         end
-        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:, threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil, progress: nil); end
+        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:, threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, progress: nil, percentage: nil, rows_processed: nil, total_rows: nil); end
 
         sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
         def self.from_h(h); end

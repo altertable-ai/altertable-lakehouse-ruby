@@ -140,7 +140,7 @@ module Altertable
                     :threads, :fingerprint, :session_catalog, :session_schema
 
         def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:,
-                       threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil, progress: nil)
+                       threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, progress: nil, percentage: nil, rows_processed: nil, total_rows: nil)
           @uuid = uuid
           @start_time = start_time
           @end_time = end_time
