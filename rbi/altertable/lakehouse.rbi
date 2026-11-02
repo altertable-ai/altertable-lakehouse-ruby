@@ -411,6 +411,17 @@ module Altertable
         def self.from_h(h); end
       end
 
+      class QueryProgress < Data
+        sig { returns(Float) }
+        def percentage; end
+
+        sig { returns(Integer) }
+        def rows_processed; end
+
+        sig { returns(Integer) }
+        def total_rows; end
+      end
+
       class QueryLogResponse < Request
         sig { returns(String) }
         def uuid; end
@@ -418,10 +429,10 @@ module Altertable
         sig { returns(String) }
         def start_time; end
 
-        sig { returns(String) }
+        sig { returns(T.nilable(String)) }
         def end_time; end
 
-        sig { returns(Integer) }
+        sig { returns(T.nilable(Integer)) }
         def duration_ms; end
 
         sig { returns(String) }
@@ -439,36 +450,54 @@ module Altertable
         sig { returns(T.untyped) }
         def stats; end
 
-        sig { returns(T.untyped) }
-        def progress; end
-
         sig { returns(T::Boolean) }
         def visible; end
 
-        sig { returns(String) }
+        sig { returns(T.nilable(String)) }
         def requested_by; end
 
-        sig { returns(String) }
+        sig { returns(T.nilable(String)) }
         def user_agent; end
+
+        sig { returns(T.nilable(::Altertable::Lakehouse::Models::QueryProgress)) }
+        def progress; end
+
+        sig { returns(T.nilable(Integer)) }
+        def threads; end
+
+        sig { returns(T.nilable(String)) }
+        def fingerprint; end
+
+        sig { returns(T.nilable(String)) }
+        def session_catalog; end
+
+        sig { returns(T.nilable(String)) }
+        def session_schema; end
 
         sig do
           params(
             uuid: String,
             start_time: String,
-            end_time: String,
-            duration_ms: Integer,
+            end_time: T.nilable(String),
+            duration_ms: T.nilable(Integer),
             query: String,
             session_id: String,
             client_interface: String,
             error: T.untyped,
             stats: T.untyped,
-            progress: T.untyped,
             visible: T::Boolean,
-            requested_by: String,
-            user_agent: String
+            requested_by: T.nilable(String),
+            user_agent: T.nilable(String),
+            threads: T.nilable(Integer),
+            fingerprint: T.nilable(String),
+            session_catalog: T.nilable(String),
+            session_schema: T.nilable(String),
+            percentage: T.nilable(Numeric),
+            rows_processed: T.nilable(Integer),
+            total_rows: T.nilable(Integer)
           ).void
         end
-        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, progress:, visible:, requested_by:, user_agent:); end
+        def initialize(uuid:, start_time:, end_time:, duration_ms:, query:, session_id:, client_interface:, error:, stats:, visible:, requested_by:, user_agent:, threads: nil, fingerprint: nil, session_catalog: nil, session_schema: nil, percentage: nil, rows_processed: nil, total_rows: nil); end
 
         sig { params(h: T::Hash[String, T.untyped]).returns(::Altertable::Lakehouse::Models::QueryLogResponse) }
         def self.from_h(h); end

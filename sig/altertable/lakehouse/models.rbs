@@ -88,35 +88,55 @@ module Altertable
         def self.from_h: (::Hash[String, untyped] h) -> ValidateResponse
       end
 
+      class QueryProgress < ::Data
+        attr_reader percentage: Float
+        attr_reader rows_processed: Integer
+        attr_reader total_rows: Integer
+
+        def self.new: (percentage: Float, rows_processed: Integer, total_rows: Integer) -> instance
+                    | (Float percentage, Integer rows_processed, Integer total_rows) -> instance
+        def to_h: () -> { percentage: Float, rows_processed: Integer, total_rows: Integer }
+      end
+
       class QueryLogResponse < Request
         attr_reader uuid: String
         attr_reader start_time: String
-        attr_reader end_time: String
-        attr_reader duration_ms: Integer
+        attr_reader end_time: String?
+        attr_reader duration_ms: Integer?
         attr_reader query: String
         attr_reader session_id: String
         attr_reader client_interface: String
         attr_reader error: untyped
         attr_reader stats: untyped
-        attr_reader progress: untyped
+        def progress: () -> QueryProgress?
         attr_reader visible: bool
-        attr_reader requested_by: String
-        attr_reader user_agent: String
+        attr_reader requested_by: String?
+        attr_reader user_agent: String?
+        attr_reader threads: Integer?
+        attr_reader fingerprint: String?
+        attr_reader session_catalog: String?
+        attr_reader session_schema: String?
 
         def initialize: (
           uuid: String,
           start_time: String,
-          end_time: String,
-          duration_ms: Integer,
+          end_time: String?,
+          duration_ms: Integer?,
           query: String,
           session_id: String,
           client_interface: String,
           error: untyped,
           stats: untyped,
-          progress: untyped,
           visible: bool,
-          requested_by: String,
-          user_agent: String
+          requested_by: String?,
+          user_agent: String?,
+          ?threads: Integer?,
+          ?fingerprint: String?,
+          ?session_catalog: String?,
+          ?session_schema: String?,
+          ?percentage: Numeric?,
+          ?rows_processed: Integer?,
+          ?total_rows: Integer?
         ) -> void
 
         def self.from_h: (::Hash[String, untyped] h) -> QueryLogResponse
