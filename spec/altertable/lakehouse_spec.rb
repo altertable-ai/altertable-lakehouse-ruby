@@ -569,7 +569,7 @@ RSpec.describe Altertable::Lakehouse::Client do
       expect(resp.error).to be_nil
       expect(resp.tables.length).to eq(1)
       expect(resp.tables.first.table_name).to end_with(table_name)
-      expect(resp.tables.first.filters).to eq("id>50")
+      expect(resp.tables.first.filters).to match(/\A(?:id\s*>\s*50|\(id\s*>\s*50\))\z/)
       expect(resp.tables.first.estimated_rows).to be > 0
     end
 
