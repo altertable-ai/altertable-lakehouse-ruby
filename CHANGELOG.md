@@ -20,6 +20,13 @@ All notable changes to this project will be documented in this file.
 * `QueryResult#columns` and `query_all[:columns]` return typed column descriptors again instead of bare names; rows stay keyed by column name.
 * A malformed `/query` column line (anything other than an array of `{ "name", "type" }` string objects) now raises `ParseError` instead of passing through untyped.
 
+## [0.9.1](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.9.0...altertable-lakehouse/v0.9.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **query:** read query log progress from top-level fields ([#60](https://github.com/altertable-ai/altertable-lakehouse-ruby/issues/60)) ([d73f6e2](https://github.com/altertable-ai/altertable-lakehouse-ruby/commit/d73f6e2041d05fff2cdfa793da42f2ff67b8e413))
+
 ## [0.9.0](https://github.com/altertable-ai/altertable-lakehouse-ruby/compare/altertable-lakehouse/v0.8.2...altertable-lakehouse/v0.9.0) (2026-10-12)
 
 
