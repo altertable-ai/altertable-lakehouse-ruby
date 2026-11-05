@@ -5,14 +5,16 @@ require "socket"
 # body piece by piece, pausing until the test lets it continue. A row the
 # client yields during a pause proves it did not wait for the whole body.
 RSpec.describe Altertable::Lakehouse::Client, "#query streaming" do
-  # Each step is a body chunk to send, or :wait to block until the test
-  # pushes to `release`.
+  # Each step is a body chunk to send, :wait to block until the test pushes
+  # to `release`, or a number of seconds to pause. `delay` pauses before the
+  # response headers.
   class StreamingServer
     attr_reader :port, :release
 
-    def initialize(status:, steps:)
+    def initialize(status:, steps:, delay: 0)
       @status = status
       @steps = steps
+      @delay = delay
       @release = Queue.new
       @server = TCPServer.new("127.0.0.1", 0)
       @port = @server.addr[1]
@@ -30,10 +32,13 @@ RSpec.describe Altertable::Lakehouse::Client, "#query streaming" do
     def serve
       socket = @server.accept
       read_request(socket)
+      sleep(@delay)
       socket.write("HTTP/1.1 #{@status} Whatever\r\nContent-Type: application/x-ndjson\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n")
       @steps.each do |step|
         if step == :wait
           @release.pop
+        elsif step.is_a?(Numeric)
+          sleep(step)
         else
           socket.write("#{step.bytesize.to_s(16)}\r\n#{step}\r\n")
           socket.flush
@@ -54,13 +59,13 @@ RSpec.describe Altertable::Lakehouse::Client, "#query streaming" do
     end
   end
 
-  def client_for(server, adapter)
+  def client_for(server, adapter, timeout: 5)
     described_class.new(
       username: "u",
       password: "p",
       base_url: "http://127.0.0.1:#{server.port}",
       adapter: adapter,
-      timeout: 5,
+      timeout: timeout,
       proxy: nil
     )
   end
@@ -152,6 +157,42 @@ RSpec.describe Altertable::Lakehouse::Client, "#query streaming" do
           columns: [Altertable::Lakehouse::ColumnDescriptor.new(name: "n", type: "INTEGER")],
           rows: [{ "n" => 1 }]
         )
+      end
+    end
+  end
+
+  # Net::HTTP reports read timeouts as NetworkError, so only the adapters
+  # that raise TimeoutError are checked here.
+  %i[faraday httpx].each do |adapter|
+    context "with the #{adapter} adapter and a short timeout" do
+      let(:header) { "{\"statement\":\"SELECT 1 AS n\"}\n[{\"name\":\"n\",\"type\":\"INTEGER\"}]\n" }
+
+      it "raises TimeoutError when the response starts later than the timeout" do
+        @server = StreamingServer.new(status: 200, delay: 1, steps: [header, "[1]\n"])
+        started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+        expect {
+          client_for(@server, adapter, timeout: 0.2).query(statement: "SELECT 1 AS n").to_a
+        }.to raise_error(Altertable::Lakehouse::TimeoutError)
+        expect(Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).to be < 0.9
+      end
+
+      it "raises TimeoutError when the stream stalls longer than the timeout" do
+        @server = StreamingServer.new(status: 200, steps: [header, "[1]\n", 1, "[2]\n"])
+        rows = []
+
+        expect {
+          client_for(@server, adapter, timeout: 0.2).query(statement: "SELECT 1 AS n").each { |row| rows << row }
+        }.to raise_error(Altertable::Lakehouse::TimeoutError)
+        expect(rows).to eq([{ "n" => 1 }])
+      end
+
+      it "streams a response that takes longer than the timeout overall" do
+        @server = StreamingServer.new(status: 200, steps: [header, 0.1, "[1]\n", 0.1, "[2]\n", 0.1, "[3]\n"])
+
+        rows = client_for(@server, adapter, timeout: 0.2).query(statement: "SELECT 1 AS n").to_a
+
+        expect(rows).to eq([{ "n" => 1 }, { "n" => 2 }, { "n" => 3 }])
       end
     end
   end

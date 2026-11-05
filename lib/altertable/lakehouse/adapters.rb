@@ -123,7 +123,13 @@ module Altertable
         def stream_post(client, path, body:, params:, &block)
           # The stream plugin drops the base_url origin, so pass a full URL.
           url = "#{@base_url.to_s.chomp('/')}#{path}"
-          response = client.request("POST", url, body: body, params: params, stream: true)
+          # It also sets a 60s operation timeout, so restore the configured
+          # one. operation_timeout bounds each wait on the socket (a late
+          # response or a stalled stream), like Net::HTTP's read_timeout. The
+          # plugin's infinite read_timeout stays: on a stream it would cap the
+          # whole response.
+          timeout = { operation_timeout: @timeout, connect_timeout: @open_timeout }
+          response = client.request("POST", url, body: body, params: params, stream: true, timeout: timeout)
           begin
             response.each { |chunk| block.call(chunk, response.status) }
           rescue HTTPX::HTTPError => e
