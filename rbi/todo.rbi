@@ -7,3 +7,5 @@ class Faraday::TimeoutError < Faraday::ServerError; end
 module HTTPX; end
 class HTTPX::Error < StandardError; end
 class HTTPX::ErrorResponse; end
+class HTTPX::HTTPError < HTTPX::Error; end
+class HTTPX::TimeoutError < HTTPX::Error; end

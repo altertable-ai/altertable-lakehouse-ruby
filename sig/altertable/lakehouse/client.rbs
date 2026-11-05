@@ -99,8 +99,25 @@ module Altertable
         ?query: ::Hash[Symbol | String, untyped]?,
         ?headers: ::Hash[String, String]
       ) -> untyped
-      def handle_stream_response: (Adapters::Response resp, String buffer, Enumerator::Yielder yielder) -> void
+      def handle_stream_response: (Adapters::Response resp, NdjsonStream stream) -> void
+      def stream_error_body: (Adapters::Response resp, NdjsonStream stream) -> String
       def handle_response: (Adapters::Response resp) -> untyped
+    end
+
+    class NdjsonStream
+      @on_value: ^(untyped value) -> void
+      @buffer: String
+      @streaming: bool
+
+      def initialize: () { (untyped value) -> void } -> void
+      def write: (String chunk, Integer? status) -> void
+      def finish: () -> void
+      def body: () -> String
+
+      private
+
+      def emit_complete_lines: () -> void
+      def emit: (String line) -> void
     end
 
     class ColumnDescriptor < ::Data

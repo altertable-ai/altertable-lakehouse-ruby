@@ -13,10 +13,13 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 * Require Ruby 3.2 or newer (`ColumnDescriptor` is a `Data` class). CI already only tested 3.2+.
+* `query` streams its result: rows are parsed and yielded as `/query` chunks arrive, instead of after the whole body is held in memory. This works with the Faraday, HTTPX and Net::HTTP adapters.
+* A malformed `/query` NDJSON line now raises `ParseError` instead of being skipped.
 
 ### Fixed
 
 * `QueryLogResponse#progress` is no longer always `nil`.
+* `query` works with the HTTPX adapter. It raised `HTTPX::Error: invalid URI: /query` because the streamed request lost the client's base URL.
 * `QueryResult#columns` and `query_all[:columns]` return typed column descriptors again instead of bare names; rows stay keyed by column name.
 * A malformed `/query` column line (anything other than an array of `{ "name", "type" }` string objects) now raises `ParseError` instead of passing through untyped.
 
