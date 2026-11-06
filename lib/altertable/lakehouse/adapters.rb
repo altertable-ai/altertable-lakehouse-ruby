@@ -56,7 +56,8 @@ module Altertable
             req.params = params if params
             req.headers = req.headers.merge(headers) unless headers.empty?
             req.body = body
-            req.options.on_data = block if block_given?
+            # Faraday 2 passes the env, whose status is set before the first chunk.
+            req.options.on_data = proc { |chunk, _received, env| block.call(chunk, env&.status) } if block_given?
           end
           wrap_response(resp)
         rescue Faraday::ConnectionFailed => e
@@ -93,7 +94,7 @@ module Altertable
             base_url: @base_url
           }
           http_options[:proxy] = options[:proxy] if options.key?(:proxy)
-          @client = HTTPX.plugin(:retries).with(**http_options)
+          @client = HTTPX.plugin(:retries).plugin(:stream).with(**http_options)
         end
 
         def get(path, body: nil, params: {}, headers: {}, &_block) # rubocop:disable Lint/UnusedMethodArgument
@@ -101,22 +102,10 @@ module Altertable
           wrap_response(resp)
         end
 
-        def post(path, body: nil, params: {}, headers: {}, &block)
+        def post(path, body: nil, params: {}, headers: {}, &)
           client = @client.with(headers: headers)
           if block_given?
-            # Stream response body
-            # HTTPX response streaming:
-            response = client.request("POST", path, body: body, params: params, stream: true)
-            
-            # Check for error immediately
-            if response.is_a?(HTTPX::ErrorResponse)
-              raise Altertable::Lakehouse::NetworkError, response.error.message
-            end
-
-            response.body.each do |chunk|
-              block.call(chunk, response.headers["content-length"])
-            end
-            wrap_response(response)
+            stream_post(client, path, body: body, params: params, &)
           else
             resp = client.post(path, body: body, params: params)
             wrap_response(resp)
@@ -129,6 +118,30 @@ module Altertable
         end
 
         private
+
+        # Yields body chunks as they arrive instead of buffering the body.
+        def stream_post(client, path, body:, params:, &block)
+          # The stream plugin drops the base_url origin, so pass a full URL.
+          url = "#{@base_url.to_s.chomp('/')}#{path}"
+          # It also sets a 60s operation timeout, so restore the configured
+          # one. operation_timeout bounds each wait on the socket (a late
+          # response or a stalled stream), like Net::HTTP's read_timeout. The
+          # plugin's infinite read_timeout stays: on a stream it would cap the
+          # whole response.
+          timeout = { operation_timeout: @timeout, connect_timeout: @open_timeout }
+          response = client.request("POST", url, body: body, params: params, stream: true, timeout: timeout)
+          begin
+            response.each { |chunk| block.call(chunk, response.status) }
+          rescue HTTPX::HTTPError => e
+            # Raised once a 4xx/5xx body has been streamed to the block.
+            return Response.new(e.response.status, nil, e.response.headers)
+          rescue HTTPX::TimeoutError => e
+            raise Altertable::Lakehouse::TimeoutError, e.message
+          rescue HTTPX::Error => e
+            raise Altertable::Lakehouse::NetworkError, e.message
+          end
+          Response.new(response.status, nil, response.headers)
+        end
 
         def wrap_response(resp)
           if resp.is_a?(HTTPX::ErrorResponse)
@@ -178,7 +191,7 @@ module Altertable
                 # Stream the body if block is given
                 if response.is_a?(Net::HTTPSuccess)
                   response.read_body do |chunk|
-                    block.call(chunk, response.content_length)
+                    block.call(chunk, response.code.to_i)
                   end
                 end
                 # Return wrapped response (body might be empty if consumed?)

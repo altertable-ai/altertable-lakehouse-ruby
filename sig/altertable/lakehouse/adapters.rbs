@@ -45,6 +45,7 @@ module Altertable
 
         private
 
+        def stream_post: (untyped client, String path, body: String?, params: ::Hash[Symbol | String, untyped]) { (String chunk, Integer status) -> void } -> Response
         def wrap_response: (untyped resp) -> Response
       end
 

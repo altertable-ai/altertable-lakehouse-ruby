@@ -197,11 +197,36 @@ module Altertable
       end
       def request(method, path, body: nil, query: nil, headers: {}); end
 
-      sig { params(resp: ::Altertable::Lakehouse::Adapters::Response, buffer: String, yielder: Enumerator::Yielder).void }
-      def handle_stream_response(resp, buffer, yielder); end
+      sig { params(resp: ::Altertable::Lakehouse::Adapters::Response, stream: ::Altertable::Lakehouse::NdjsonStream).void }
+      def handle_stream_response(resp, stream); end
+
+      sig { params(resp: ::Altertable::Lakehouse::Adapters::Response, stream: ::Altertable::Lakehouse::NdjsonStream).returns(String) }
+      def stream_error_body(resp, stream); end
 
       sig { params(resp: ::Altertable::Lakehouse::Adapters::Response).returns(T.untyped) }
       def handle_response(resp); end
+    end
+
+    class NdjsonStream
+      sig { params(on_value: T.proc.params(value: T.untyped).void).void }
+      def initialize(&on_value); end
+
+      sig { params(chunk: String, status: T.nilable(Integer)).void }
+      def write(chunk, status); end
+
+      sig { void }
+      def finish; end
+
+      sig { returns(String) }
+      def body; end
+
+      private
+
+      sig { void }
+      def emit_complete_lines; end
+
+      sig { params(line: String).void }
+      def emit(line); end
     end
 
     class ColumnDescriptor < Data
@@ -857,6 +882,17 @@ module Altertable
         def delete(path, body: nil, params: {}, headers: {}, &block); end
 
         private
+
+        sig do
+          params(
+            client: T.untyped,
+            path: String,
+            body: T.nilable(String),
+            params: T::Hash[T.any(Symbol, String), T.untyped],
+            block: T.proc.params(arg0: String, arg1: Integer).void
+          ).returns(::Altertable::Lakehouse::Adapters::Response)
+        end
+        def stream_post(client, path, body:, params:, &block); end
 
         sig { params(resp: T.untyped).returns(::Altertable::Lakehouse::Adapters::Response) }
         def wrap_response(resp); end

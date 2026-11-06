@@ -63,14 +63,15 @@ module Altertable
         req_body = Models::QueryRequest.new(statement: statement, **).to_h.to_json
 
         enum = Enumerator.new do |yielder|
-          buffer = ""
-          
-          # Use adapter's stream capability
-          resp = @adapter.post("/query", body: req_body, headers: json_headers(headers)) do |chunk, _|
-            buffer << chunk
+          stream = NdjsonStream.new { |value| yielder << value }
+
+          # The adapter yields each body chunk with the response status (when
+          # it knows it), so rows reach the caller as they arrive.
+          resp = @adapter.post("/query", body: req_body, headers: json_headers(headers)) do |chunk, status|
+            stream.write(chunk, status)
           end
 
-          handle_stream_response(resp, buffer, yielder)
+          handle_stream_response(resp, stream)
         end
 
         QueryResult.new(enum)
@@ -219,41 +220,25 @@ module Altertable
         end
       end
 
-      def handle_stream_response(resp, buffer, yielder)
+      def handle_stream_response(resp, stream)
         case resp.status
+        when 200..299
+          stream.finish
         when 400
-          raise BadRequestError, "Bad Request: #{buffer.strip}"
+          raise BadRequestError, "Bad Request: #{stream_error_body(resp, stream)}"
         when 401
           raise AuthError, "Unauthorized"
-        when 200..299
-          # Parse the accumulated NDJSON buffer line by line
-          # Buffer might be partial? 
-          # In streaming, the block is called.
-          # Here we are processing after the stream is done?
-          # Wait, QueryResult expects the stream to be processed as it comes?
-          # The previous implementation used an Enumerator that yielded as data came in.
-          # Here, @adapter.post blocks until done?
-          # If @adapter.post blocks, we only get the buffer at the end.
-          # To stream truly, @adapter.post needs to yield to the block, which yields to yielder?
-          
-          # Re-implementing streaming logic:
-          # The enumerator in `query` wraps the call. 
-          # When `query` returns QueryResult, it hasn't run the request yet.
-          # Enumerator logic is inside.
-          
-          buffer.each_line do |line|
-            line = line.strip
-            next if line.empty?
-            begin
-              yielder << JSON.parse(line)
-            rescue JSON::ParserError
-              # Partial line?
-              # For now assume full lines or handle buffering properly
-            end
-          end
         else
-          raise ApiError, "API Error #{resp.status}: #{buffer.strip}"
+          raise ApiError, "API Error #{resp.status}: #{stream_error_body(resp, stream)}"
         end
+      end
+
+      # Adapters stream error bodies to the block too, except Net::HTTP, which
+      # returns them in the response.
+      def stream_error_body(resp, stream)
+        body = stream.body
+        body = resp.body.to_s if body.empty?
+        body.strip
       end
 
       def handle_response(resp)
@@ -275,6 +260,62 @@ module Altertable
         else
           raise ApiError, "API Error #{resp.status}: #{resp.body}"
         end
+      end
+    end
+
+    # Splits a /query NDJSON body into JSON values as chunks arrive, carrying a
+    # partial trailing line over to the next chunk. Until a chunk comes with a
+    # 2xx status, the body is only buffered: it may be an error message, or the
+    # adapter may not know the status before the response ends.
+    class NdjsonStream
+      def initialize(&on_value)
+        @on_value = on_value
+        @buffer = String.new(encoding: Encoding::BINARY)
+        @streaming = false
+      end
+
+      def write(chunk, status)
+        @buffer << chunk.b
+        @streaming ||= !status.nil? && (200..299).cover?(status)
+        emit_complete_lines if @streaming
+      end
+
+      # Emits whatever is left once the response ended with a 2xx status.
+      def finish
+        emit_complete_lines
+        emit(@buffer)
+        @buffer = String.new(encoding: Encoding::BINARY)
+      end
+
+      # The buffered, not yet emitted body.
+      def body
+        @buffer.dup.force_encoding(Encoding::UTF_8)
+      end
+
+      private
+
+      def emit_complete_lines
+        last_newline = @buffer.rindex("\n")
+        return unless last_newline
+
+        complete = @buffer.byteslice(0..last_newline)
+        @buffer = @buffer.byteslice((last_newline + 1)..)
+        complete.each_line { |line| emit(line) }
+      end
+
+      def emit(line)
+        line = line.dup.force_encoding(Encoding::UTF_8).strip
+        return if line.empty?
+
+        @on_value.call(JSON.parse(line))
+      rescue JSON::ParserError => e
+        raise ParseError.new(
+          "Malformed /query line: #{e.message}",
+          operation: "query",
+          http_method: "POST",
+          http_path: "/query",
+          cause: e
+        )
       end
     end
 
